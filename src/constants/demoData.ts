@@ -1,38 +1,6 @@
 import type { DemoAccount, SelectedPackage } from './types';
 
-export const demoAccounts: DemoAccount[] = [
-  {
-    email: 'superadmin@exology.com',
-    username: 'admin_ahmed',
-    password: 'admin123',
-    role: 'super_admin',
-    name: 'مدير النظام',
-    organization: 'Exology'
-  },
-  {
-    email: 'admin@atharonaa.com',
-    username: 'fatima_ali',
-    password: 'admin123',
-    role: 'admin',
-    name: 'مدير أثرنا',
-    organization: 'Atharonaa'
-  },
-  {
-    email: 'manager@org.com',
-    username: 'mohammed_khaled',
-    password: 'manager123',
-    role: 'org_manager',
-    name: 'مدير المنظمة',
-    organization: 'مؤسسة خيرية'
-  },
-  {
-    email: 'beneficiary@example.com',
-    username: 'sara_ahmed',
-    password: 'user123',
-    role: 'beneficiary',
-    name: 'المستفيد'
-  }
-];
+export const demoAccounts: DemoAccount[] = [];
 
 export const availablePackages: SelectedPackage[] = [
   {

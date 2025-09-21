@@ -2,19 +2,8 @@ import { demoAccounts } from '../constants/demoData';
 import type { User, DemoAccount } from '../constants/types';
 
 export const authenticateUser = (loginInput: string, password: string): User | null => {
-  const account = demoAccounts.find(acc => 
-    (acc.email === loginInput || acc.username === loginInput) && acc.password === password
-  );
-  
-  if (account) {
-    return {
-      email: account.email,
-      name: account.name,
-      role: account.role,
-      organization: account.organization
-    };
-  }
-  
+  // Authentication will be handled by Supabase
+  // This is a placeholder for demo authentication
   return null;
 };
 

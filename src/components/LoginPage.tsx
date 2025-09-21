@@ -21,37 +21,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const demoAccounts = [
-    { 
-      email: 'superadmin@exology.com', 
-      username: 'admin_ahmed',
-      password: 'admin123', 
-      role: 'مدير النظام', 
-      org: 'Exology' 
-    },
-    { 
-      email: 'admin@atharonaa.com', 
-      username: 'fatima_ali',
-      password: 'admin123', 
-      role: 'مدير المنصة', 
-      org: 'أثرنا' 
-    },
-    { 
-      email: 'manager@org.com', 
-      username: 'mohammed_khaled',
-      password: 'manager123', 
-      role: 'مدير منظمة', 
-      org: 'مؤسسة خيرية' 
-    },
-    { 
-      email: 'beneficiary@example.com', 
-      username: 'sara_ahmed',
-      password: 'user123', 
-      role: 'مستفيد', 
-      org: null 
-    }
-  ];
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -75,11 +44,8 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
   };
 
   const handleDemoLogin = (email: string, demoPassword: string) => {
-    setLoginInput(email);
-    setPassword(demoPassword);
-    setTimeout(() => {
-      onLogin(email, demoPassword);
-    }, 500);
+    // Demo login removed - use real authentication
+    toast.info('يرجى استخدام بيانات دخول حقيقية');
   };
 
   return (
@@ -103,34 +69,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
               variant="light"
               className="cursor-pointer transform hover:scale-105 transition-transform duration-200"
             />
-          </div>
-
-          {/* Subtitle */}
-          <h2 className="text-xl text-blue-100 mb-4">
-            مرحباً بك في منصة قياس الأثر الاجتماعي
-          </h2>
-
-          {/* Description */}
-          <p className="text-blue-200 leading-relaxed mb-6 text-center">
-            منصة شاملة لقياس وتقييم الأثر الاجتماعي للمؤسسات والمنظمات غير الربحية، 
-            مع أدوات متقدمة للتحليل والذكاء الاصطناعي.
-          </p>
-
-          {/* Statistics */}
-          <div className="flex justify-center gap-8 mb-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-                <Building className="w-6 h-6" />
-                500+
-              </div>
-              <div className="text-sm text-blue-200">منظمة مسجلة</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-                <Users className="w-6 h-6" />
-                50K+
-              </div>
-              <div className="text-sm text-blue-200">مستفيد</div>
             </div>
           </div>
         </div>
