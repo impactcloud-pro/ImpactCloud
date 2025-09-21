@@ -151,34 +151,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
               </Button>
             </form>
 
-            {/* Test Users Section */}
-            <div className="space-y-3">
-              <div className="text-center mb-4">
-                <span className="text-sm text-blue-200">
-                  أو جرب الحسابات التجريبية
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                {demoAccounts.map((account, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleDemoLogin(account.email, account.password)}
-                    className="p-3 text-center bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all duration-200 group"
-                  >
-                    <div className="text-center">
-                      <div className="text-sm font-medium text-white mb-1">{account.role}</div>
-                      <div className="text-xs text-blue-200">@{account.username}</div>
-                      {account.org && (
-                        <Badge variant="outline" className="mt-1 text-xs border-white/30 text-blue-200">
-                          {account.org}
-                        </Badge>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
