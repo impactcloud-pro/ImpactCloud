@@ -1,0 +1,606 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 14px;
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #183259;
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.0058 264.53);
+  --secondary-foreground: #183259;
+  --muted: #ececf0;
+  --muted-foreground: #717182;
+  --accent: #e9ebef;
+  --accent-foreground: #183259;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #f3f3f5;
+  --switch-background: #cbced4;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #183259;
+  --chart-1: #183259;
+  --chart-2: #2a4a7a;
+  --chart-3: #4a6ba3;
+  --chart-4: #6b85cc;
+  --chart-5: #8da4c7;
+  --radius: 0.625rem;
+  --sidebar: #183259;
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #183259;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: rgba(255, 255, 255, 0.1);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: rgba(255, 255, 255, 0.2);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  /* Cursor pointer for all clickable elements */
+  button,
+  a,
+  [role="button"],
+  [tabindex="0"],
+  [onclick],
+  .cursor-pointer,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  select,
+  summary,
+  [data-clickable="true"] {
+    cursor: pointer;
+  }
+
+  /* Ensure disabled elements don't show pointer cursor */
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  /* Special cursor for text inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea {
+    cursor: text;
+  }
+
+  /* Pointer cursor for interactive elements */
+  .clickable,
+  [data-state],
+  [aria-expanded],
+  [aria-haspopup] {
+    cursor: pointer;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Cairo', 'IBM Plex Arabic', 'Noto Sans Arabic', 'Inter', 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    direction: rtl;
+    text-align: right;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Default RTL and Arabic text alignment */
+  * {
+    direction: rtl;
+    text-align: right;
+  }
+  
+  /* Override for elements that should be LTR */
+  code, pre, .ltr {
+    direction: ltr;
+    text-align: left;
+  }
+  
+  /* Center headings by default */
+  h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+    direction: rtl;
+  }
+  
+  /* Ensure proper text alignment for common elements */
+  p, div, span, label, button, input, textarea, li, td, th {
+    text-align: right;
+    direction: rtl;
+  }
+  
+  /* RTL Support */
+  [dir="rtl"] {
+    direction: rtl;
+  }
+  
+  /* Fix spacing for RTL */
+  [dir="rtl"] .space-x-1 > * + * {
+    margin-left: 0;
+    margin-right: 0.25rem;
+  }
+  
+  [dir="rtl"] .space-x-2 > * + * {
+    margin-left: 0;
+    margin-right: 0.5rem;
+  }
+  
+  [dir="rtl"] .space-x-3 > * + * {
+    margin-left: 0;
+    margin-right: 0.75rem;
+  }
+  
+  [dir="rtl"] .space-x-4 > * + * {
+    margin-left: 0;
+    margin-right: 1rem;
+  }
+  
+  [dir="rtl"] .space-x-6 > * + * {
+    margin-left: 0;
+    margin-right: 1.5rem;
+  }
+  
+  [dir="rtl"] .space-x-8 > * + * {
+    margin-left: 0;
+    margin-right: 2rem;
+  }
+  
+  [dir="rtl"] .space-x-reverse > * + * {
+    margin-left: 0.5rem;
+    margin-right: 0;
+  }
+
+  /* Fix margins for RTL */
+  [dir="rtl"] .mr-1 { margin-right: 0; margin-left: 0.25rem; }
+  [dir="rtl"] .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+  [dir="rtl"] .mr-3 { margin-right: 0; margin-left: 0.75rem; }
+  [dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
+  [dir="rtl"] .ml-1 { margin-left: 0; margin-right: 0.25rem; }
+  [dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+  [dir="rtl"] .ml-3 { margin-left: 0; margin-right: 0.75rem; }
+  [dir="rtl"] .ml-4 { margin-left: 0; margin-right: 1rem; }
+
+  /* Fix padding for RTL */
+  [dir="rtl"] .pr-1 { padding-right: 0; padding-left: 0.25rem; }
+  [dir="rtl"] .pr-2 { padding-right: 0; padding-left: 0.5rem; }
+  [dir="rtl"] .pr-3 { padding-right: 0; padding-left: 0.75rem; }
+  [dir="rtl"] .pr-4 { padding-right: 0; padding-left: 1rem; }
+  [dir="rtl"] .pr-8 { padding-right: 0; padding-left: 2rem; }
+  [dir="rtl"] .pl-1 { padding-left: 0; padding-right: 0.25rem; }
+  [dir="rtl"] .pl-2 { padding-left: 0; padding-right: 0.5rem; }
+  [dir="rtl"] .pl-3 { padding-left: 0; padding-right: 0.75rem; }
+  [dir="rtl"] .pl-4 { padding-left: 0; padding-right: 1rem; }
+  [dir="rtl"] .pl-8 { padding-left: 0; padding-right: 2rem; }
+
+  /* Fix flex direction for RTL */
+  [dir="rtl"] .flex-row-reverse { flex-direction: row; }
+  [dir="rtl"] .flex-row { flex-direction: row-reverse; }
+
+  /* Fix text alignment */
+  [dir="rtl"] .text-left { text-align: right; }
+  [dir="rtl"] .text-right { text-align: left; }
+
+  /* Fix border radius for RTL */
+  [dir="rtl"] .rounded-l { border-radius: 0 0.375rem 0.375rem 0; }
+  [dir="rtl"] .rounded-r { border-radius: 0.375rem 0 0 0.375rem; }
+  [dir="rtl"] .rounded-tl { border-top-left-radius: 0; border-top-right-radius: 0.375rem; }
+  [dir="rtl"] .rounded-tr { border-top-right-radius: 0; border-top-left-radius: 0.375rem; }
+  [dir="rtl"] .rounded-bl { border-bottom-left-radius: 0; border-bottom-right-radius: 0.375rem; }
+  [dir="rtl"] .rounded-br { border-bottom-right-radius: 0; border-bottom-left-radius: 0.375rem; }
+
+  /* Fix tabs direction for RTL */
+  [dir="rtl"] [role="tablist"] {
+    flex-direction: row-reverse !important;
+  }
+  
+  /* Fix grid direction for RTL */
+  [dir="rtl"] .grid-cols-4,
+  [dir="rtl"] .grid-cols-5 {
+    direction: rtl;
+  }
+  
+  /* Fix TabsList for RTL */
+  [dir="rtl"] [data-slot="tabs-list"] {
+    flex-direction: row-reverse;
+  }
+  
+  /* Force RTL direction for grid-based tabs */
+  [dir="rtl"] .grid.grid-cols-4 > *:nth-child(1) { order: 4; }
+  [dir="rtl"] .grid.grid-cols-4 > *:nth-child(2) { order: 3; }
+  [dir="rtl"] .grid.grid-cols-4 > *:nth-child(3) { order: 2; }
+  [dir="rtl"] .grid.grid-cols-4 > *:nth-child(4) { order: 1; }
+  
+  [dir="rtl"] .grid.grid-cols-5 > *:nth-child(1) { order: 5; }
+  [dir="rtl"] .grid.grid-cols-5 > *:nth-child(2) { order: 4; }
+  [dir="rtl"] .grid.grid-cols-5 > *:nth-child(3) { order: 3; }
+  [dir="rtl"] .grid.grid-cols-5 > *:nth-child(4) { order: 2; }
+  [dir="rtl"] .grid.grid-cols-5 > *:nth-child(5) { order: 1; }
+  
+  /* Dashboard tabs should maintain natural order (right to left in RTL) */
+  .dashboard-tabs-list {
+    direction: rtl;
+  }
+  
+  /* Override the default grid order reversal for dashboard tabs */
+  [dir="rtl"] .dashboard-tabs-list.grid-cols-5 > *:nth-child(1) { order: 1 !important; }
+  [dir="rtl"] .dashboard-tabs-list.grid-cols-5 > *:nth-child(2) { order: 2 !important; }
+  [dir="rtl"] .dashboard-tabs-list.grid-cols-5 > *:nth-child(3) { order: 3 !important; }
+  [dir="rtl"] .dashboard-tabs-list.grid-cols-5 > *:nth-child(4) { order: 4 !important; }
+  [dir="rtl"] .dashboard-tabs-list.grid-cols-5 > *:nth-child(5) { order: 5 !important; }
+  
+  /* Ensure proper RTL text alignment within tabs and fix icon spacing */
+  [dir="rtl"] .dashboard-tabs-list button {
+    direction: rtl;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  /* Fix spacing between icon and text in RTL tabs */
+  [dir="rtl"] .dashboard-tabs-list button .mr-2 {
+    margin-right: 0;
+    margin-left: 0.5rem;
+  }
+  
+  /* Sidebar navigation enhancement for RTL */
+  [dir="rtl"] aside nav {
+    direction: rtl;
+  }
+  
+  [dir="rtl"] aside nav .space-y-2 > * {
+    text-align: right;
+  }
+  
+  /* Ensure sidebar buttons maintain RTL layout */
+  [dir="rtl"] aside button {
+    justify-content: flex-start;
+    text-align: right;
+    direction: rtl;
+  }
+  
+  /* Fix icon positioning in sidebar buttons */
+  [dir="rtl"] aside button .gap-3 {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  /* Analysis page tabs should maintain natural RTL order */
+  .analysis-tabs-list {
+    direction: rtl;
+  }
+  
+  /* Override the default grid order reversal for analysis tabs */
+  [dir="rtl"] .analysis-tabs-list.grid-cols-3 > *:nth-child(1) { order: 1 !important; }
+  [dir="rtl"] .analysis-tabs-list.grid-cols-3 > *:nth-child(2) { order: 2 !important; }
+  [dir="rtl"] .analysis-tabs-list.grid-cols-3 > *:nth-child(3) { order: 3 !important; }
+  
+  /* Analysis selection tabs */
+  .analysis-selection-tabs {
+    direction: rtl;
+  }
+  
+  [dir="rtl"] .analysis-selection-tabs.grid-cols-2 > *:nth-child(1) { order: 1 !important; }
+  [dir="rtl"] .analysis-selection-tabs.grid-cols-2 > *:nth-child(2) { order: 2 !important; }
+  
+  /* Ensure proper RTL text alignment within analysis tabs */
+  [dir="rtl"] .analysis-tabs-list button,
+  [dir="rtl"] .analysis-selection-tabs button {
+    direction: rtl;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+/* Custom scrollbar for RTL */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Improve form inputs for Arabic */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="number"],
+textarea {
+  font-family: 'Cairo', 'IBM Plex Arabic', 'Noto Sans Arabic', 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-feature-settings: 'kern' 1;
+}
+
+/* Import Arabic fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Arabic:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+/* Ensure proper Arabic text rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fix Arabic text direction and alignment */
+[dir="rtl"] * {
+  font-family: 'Cairo', 'IBM Plex Arabic', 'Noto Sans Arabic', 'Inter', 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Ensure proper unicode handling for Arabic text */
+html {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+/* Better Arabic typography */
+p, span, div, label, button, input, textarea {
+  text-align: inherit;
+  unicode-bidi: isolate;
+}
+
+/* Arabic text optimization */
+[lang="ar"], [dir="rtl"] {
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  letter-spacing: 0.01em;
+  word-spacing: 0.02em;
+}
+
+/* Improve Arabic text rendering quality */
+.arabic-text {
+  font-family: 'Cairo', 'IBM Plex Arabic', 'Noto Sans Arabic', sans-serif;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'ccmp' 1, 'locl' 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fix for broken Arabic characters in legacy systems */
+.text-fix {
+  unicode-bidi: bidi-override;
+  direction: rtl;
+}
+
+/* Special handling for numbers in Arabic text */
+.arabic-numbers {
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: embed;
+}
+
+/* Custom brand colors */
+.text-brand-primary {
+  color: #183259;
+}
+
+.bg-brand-primary {
+  background-color: #183259;
+}
+
+.border-brand-primary {
+  border-color: #183259;
+}
+
+/* Enhanced visual effects for modern design */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-shadow {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.card-shadow-hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.gradient-brand {
+  background: linear-gradient(135deg, #183259 0%, #2a4a7a 100%);
+}
+
+.gradient-soft {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+/* Smooth animations */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
