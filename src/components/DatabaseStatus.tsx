@@ -54,17 +54,17 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
       
       // Check all tables
       const tables = [
-        'roles',
-        'subscription_plans', 
-        'organizations',
-        'users',
-        'beneficiaries',
-        'surveys',
-        'questions',
-        'responses',
-        'activity_log',
-        'transactions',
-        'requests'
+        'Roles',
+        'Subscription_plans', 
+        'Organizations',
+        'Users',
+        'Beneficiaries',
+        'Surveys',
+        'Questions',
+        'Responses',
+        'Activity_log',
+        'Transactions',
+        'Requests'
       ];
 
       const tableChecks = await Promise.all(
@@ -114,7 +114,7 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
       setTableStatuses(tableChecks);
       
       // Check if all essential tables exist
-      const essentialTables = ['roles', 'users', 'organizations', 'surveys'];
+      const essentialTables = ['Roles', 'Users', 'Organizations', 'Surveys'];
       const missingTables = tableChecks.filter(
         table => essentialTables.includes(table.name) && !table.exists
       );
@@ -143,17 +143,17 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
 
   const getTableIcon = (tableName: string) => {
     switch (tableName) {
-      case 'users': return Users;
-      case 'organizations': return Building;
-      case 'surveys': return FileText;
-      case 'beneficiaries': return Users;
-      case 'activity_log': return Activity;
-      case 'roles': return Users;
-      case 'subscription_plans': return Activity;
-      case 'questions': return FileText;
-      case 'responses': return Activity;
-      case 'transactions': return Activity;
-      case 'requests': return Building;
+      case 'Users': return Users;
+      case 'Organizations': return Building;
+      case 'Surveys': return FileText;
+      case 'Beneficiaries': return Users;
+      case 'Activity_log': return Activity;
+      case 'Roles': return Users;
+      case 'Subscription_plans': return Activity;
+      case 'Questions': return FileText;
+      case 'Responses': return Activity;
+      case 'Transactions': return Activity;
+      case 'Requests': return Building;
       default: return Database;
     }
   };
@@ -171,17 +171,17 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
 
   const getTableDisplayName = (tableName: string) => {
     const tableNames: Record<string, string> = {
-      'roles': 'الأدوار',
-      'subscription_plans': 'خطط الاشتراك',
-      'organizations': 'المنظمات',
-      'users': 'المستخدمين',
-      'beneficiaries': 'المستفيدين',
-      'surveys': 'الاستبيانات',
-      'questions': 'الأسئلة',
-      'responses': 'الاستجابات',
-      'activity_log': 'سجل الأنشطة',
-      'transactions': 'المعاملات',
-      'requests': 'طلبات التسجيل'
+      'Roles': 'الأدوار',
+      'Subscription_plans': 'خطط الاشتراك',
+      'Organizations': 'المنظمات',
+      'Users': 'المستخدمين',
+      'Beneficiaries': 'المستفيدين',
+      'Surveys': 'الاستبيانات',
+      'Questions': 'الأسئلة',
+      'Responses': 'الاستجابات',
+      'Activity_log': 'سجل الأنشطة',
+      'Transactions': 'المعاملات',
+      'Requests': 'طلبات التسجيل'
     };
     return tableNames[tableName] || tableName;
   };
