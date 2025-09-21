@@ -37,6 +37,10 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
     setIsRefreshing(true);
     
     try {
+      // Initialize database schema if needed
+      const { initializeDatabase } = await import('../lib/supabase');
+      await initializeDatabase();
+
       // Test basic connection
       const { data, error } = await supabase
         .from('roles')

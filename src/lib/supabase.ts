@@ -24,9 +24,144 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
+// Initialize database schema if needed
+export async function initializeDatabase() {
+  try {
+    // Check if roles table exists
+    const { data, error } = await supabase
+      .from('roles')
+      .select('count', { count: 'exact', head: true });
+    
+    if (error && error.code === 'PGRST116') {
+      console.log('Database tables not found, creating schema...');
+      await createDatabaseSchema();
+      return true;
+    }
+    
+    if (error) {
+      console.error('Database connection error:', error);
+      return false;
+    }
+    
+    console.log('Database schema exists and is accessible');
+    return true;
+  } catch (error) {
+    console.error('Database initialization error:', error);
+    return false;
+  }
+}
+
+// Create database schema using SQL
+async function createDatabaseSchema() {
+  const schemaSQL = `
+    -- Create roles table
+    CREATE TABLE IF NOT EXISTS roles (
+      role_id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Create subscription_plans table
+    CREATE TABLE IF NOT EXISTS subscription_plans (
+      plan_id TEXT PRIMARY KEY,
+      package_name TEXT NOT NULL,
+      description TEXT,
+      total_price_monthly DECIMAL(10,2),
+      total_price_annual DECIMAL(10,2),
+      quota_limit INTEGER,
+      features JSONB DEFAULT '[]'::jsonb,
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Create organizations table
+    CREATE TABLE IF NOT EXISTS organizations (
+      organization_id TEXT PRIMARY KEY,
+      plan_id TEXT REFERENCES subscription_plans(plan_id),
+      name TEXT NOT NULL,
+      type TEXT,
+      status TEXT DEFAULT 'active',
+      organization_manager TEXT,
+      username TEXT UNIQUE,
+      password_hash TEXT,
+      number_of_beneficiaries INTEGER DEFAULT 0,
+      number_of_surveys INTEGER DEFAULT 0,
+      quota INTEGER DEFAULT 0,
+      consumed INTEGER DEFAULT 0,
+      remaining INTEGER DEFAULT 0,
+      region TEXT,
+      contact_email TEXT,
+      contact_phone TEXT,
+      website TEXT,
+      created_by TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Create users table
+    CREATE TABLE IF NOT EXISTS users (
+      user_id TEXT PRIMARY KEY,
+      role_id TEXT REFERENCES roles(role_id),
+      organization_id TEXT REFERENCES organizations(organization_id),
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT,
+      phone_number TEXT,
+      status TEXT DEFAULT 'active',
+      last_login TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- Insert default roles
+    INSERT INTO roles (role_id, name, description) VALUES
+      ('super_admin', 'super_admin', 'مدير النظام الرئيسي'),
+      ('admin', 'admin', 'مدير أثرنا'),
+      ('org_manager', 'org_manager', 'مدير المنظمة'),
+      ('beneficiary', 'beneficiary', 'مستفيد')
+    ON CONFLICT (role_id) DO NOTHING;
+
+    -- Insert default subscription plans
+    INSERT INTO subscription_plans (plan_id, package_name, description, total_price_monthly, total_price_annual, quota_limit, features) VALUES
+      ('basic', 'الباقة الأساسية', 'باقة مناسبة للمنظمات الصغيرة', 299.00, 2988.00, 100, '["إنشاء الاستبيانات", "تحليل البيانات الأساسي", "دعم فني"]'::jsonb),
+      ('professional', 'الباقة الاحترافية', 'باقة مناسبة للمنظمات المتوسطة', 599.00, 5988.00, 500, '["إنشاء الاستبيانات", "تحليل البيانات المتقدم", "تقارير مخصصة", "دعم فني متقدم"]'::jsonb),
+      ('enterprise', 'باقة المؤسسات', 'باقة مناسبة للمؤسسات الكبيرة', 1199.00, 11988.00, 2000, '["إنشاء الاستبيانات", "تحليل البيانات المتقدم", "تقارير مخصصة", "دعم فني متقدم", "تكامل API"]'::jsonb)
+    ON CONFLICT (plan_id) DO NOTHING;
+
+    -- Enable RLS on all tables
+    ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+    -- Create basic policies
+    CREATE POLICY "Allow read access to roles" ON roles FOR SELECT USING (true);
+    CREATE POLICY "Allow read access to subscription_plans" ON subscription_plans FOR SELECT USING (true);
+  `;
+
+  try {
+    const { error } = await supabase.rpc('exec_sql', { sql: schemaSQL });
+    if (error) {
+      console.error('Schema creation error:', error);
+      throw error;
+    }
+    console.log('Database schema created successfully');
+  } catch (error) {
+    console.error('Failed to create schema:', error);
+    throw error;
+  }
+}
+
 // Test connection function
 export async function testSupabaseConnection() {
   try {
+    // First try to initialize database if needed
+    const initialized = await initializeDatabase();
+    if (!initialized) {
+      return false;
+    }
+
     const { data, error } = await supabase
       .from('roles')
       .select('count', { count: 'exact', head: true });
@@ -43,9 +178,6 @@ export async function testSupabaseConnection() {
     return false;
   }
 }
-
-// Initialize connection test
-testSupabaseConnection();
 
 // Database types based on the schema
 export interface Database {

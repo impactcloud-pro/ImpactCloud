@@ -13,7 +13,7 @@ import { toast } from 'sonner@2.0.3';
 
 // Import Supabase services
 import { useAuth, useSupabase } from './hooks/useSupabase';
-import { testSupabaseConnection } from './lib/supabase';
+import { testSupabaseConnection, initializeDatabase } from './lib/supabase';
 
 // Import database functions
 import { 
