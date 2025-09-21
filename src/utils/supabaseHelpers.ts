@@ -13,6 +13,19 @@ export function createId(prefix: string = ''): string {
 }
 
 /**
+ * Validate required environment variables
+ */
+export function validateEnvironment(): { isValid: boolean; missing: string[] } {
+  const required = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+  const missing = required.filter(key => !import.meta.env[key]);
+  
+  return {
+    isValid: missing.length === 0,
+    missing
+  };
+}
+
+/**
  * Handle Supabase errors with user-friendly messages
  */
 export function handleSupabaseError(error: any): string {
@@ -20,16 +33,25 @@ export function handleSupabaseError(error: any): string {
   
   // Common error mappings
   const errorMappings: Record<string, string> = {
+    'Invalid login credentials': 'بيانات تسجيل الدخول غير صحيحة',
+    'Email not confirmed': 'يرجى تأكيد البريد الإلكتروني',
+    'User already registered': 'المستخدم مسجل مسبقاً',
+    'Password should be at least 6 characters': 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+    'Unable to validate email address': 'عنوان البريد الإلكتروني غير صالح',
+    'signup_disabled': 'التسجيل معطل حالياً',
     'duplicate key value violates unique constraint': 'هذا العنصر موجود مسبقاً',
     'foreign key constraint': 'لا يمكن حذف هذا العنصر لأنه مرتبط بعناصر أخرى',
     'permission denied': 'ليس لديك صلاحية للقيام بهذا الإجراء',
     'row level security': 'ليس لديك صلاحية للوصول لهذه البيانات',
     'invalid input syntax': 'البيانات المدخلة غير صحيحة',
     'value too long': 'النص المدخل طويل جداً',
-    'not null violation': 'يرجى ملء جميع الحقول المطلوبة'
+    'not null violation': 'يرجى ملء جميع الحقول المطلوبة',
+    'check constraint': 'البيانات المدخلة لا تتوافق مع قواعد النظام',
+    'connection refused': 'تعذر الاتصال بقاعدة البيانات',
+    'timeout': 'انتهت مهلة الاتصال بقاعدة البيانات'
   };
 
-  const errorMessage = error.message?.toLowerCase() || '';
+  const errorMessage = error.message || '';
   
   for (const [key, value] of Object.entries(errorMappings)) {
     if (errorMessage.includes(key)) {
@@ -152,13 +174,13 @@ export async function checkUserPermission(userId: string, permission: string): P
     const rolePermissions: Record<string, string[]> = {
       'admin': [
         'manage_surveys', 'manage_users', 'view_analytics', 
-        'manage_billing', 'manage_organizations'
+        'manage_billing', 'manage_organizations', 'view_activity_logs'
       ],
       'org_manager': [
         'create_surveys', 'view_own_analytics', 'manage_org_users',
-        'manage_beneficiaries'
+        'manage_beneficiaries', 'view_own_activity_logs'
       ],
-      'beneficiary': ['take_surveys', 'view_own_responses']
+      'beneficiary': ['take_surveys', 'view_own_responses', 'update_own_profile']
     };
 
     const userPermissions = rolePermissions[user.role_id] || [];
@@ -227,29 +249,22 @@ export async function updateOrganizationQuota(organizationId: string, consumed: 
  */
 export async function incrementSurveyCount(organizationId: string) {
   try {
-    const { error } = await supabase.rpc('increment_survey_count', {
-      org_id: organizationId
-    });
+    const { data: org, error: fetchError } = await supabase
+      .from('organizations')
+      .select('number_of_surveys')
+      .eq('organization_id', organizationId)
+      .single();
 
-    if (error) {
-      // Fallback to manual increment if RPC doesn't exist
-      const { data: org, error: fetchError } = await supabase
-        .from('organizations')
-        .select('number_of_surveys')
-        .eq('organization_id', organizationId)
-        .single();
+    if (fetchError) throw fetchError;
 
-      if (fetchError) throw fetchError;
+    const { error: updateError } = await supabase
+      .from('organizations')
+      .update({
+        number_of_surveys: (org?.number_of_surveys || 0) + 1
+      })
+      .eq('organization_id', organizationId);
 
-      const { error: updateError } = await supabase
-        .from('organizations')
-        .update({
-          number_of_surveys: (org?.number_of_surveys || 0) + 1
-        })
-        .eq('organization_id', organizationId);
-
-      if (updateError) throw updateError;
-    }
+    if (updateError) throw updateError;
   } catch (error) {
     console.error('Error incrementing survey count:', error);
     throw error;
@@ -275,12 +290,12 @@ export async function getOrganizationStats(organizationId: string) {
       supabase
         .from('responses')
         .select('response_id')
-        .in('survey_id', 
-          supabase
+        .in('survey_id', (
+          await supabase
             .from('surveys')
             .select('survey_id')
             .eq('organization_id', organizationId)
-        )
+        ).data?.map(s => s.survey_id) || [])
     ]);
 
     const surveys = surveysResult.data || [];
@@ -357,6 +372,84 @@ export async function globalSearch(query: string, organizationId?: string) {
       surveys: [],
       beneficiaries: [],
       users: []
+    };
+  }
+}
+
+/**
+ * Batch operations for better performance
+ */
+export async function batchCreateBeneficiaries(beneficiaries: any[], organizationId: string) {
+  try {
+    const beneficiaryData = beneficiaries.map(b => ({
+      beneficiary_id: createId('ben_'),
+      organization_id: organizationId,
+      ...b,
+      created_at: new Date().toISOString()
+    }));
+
+    const { data, error } = await supabase
+      .from('beneficiaries')
+      .insert(beneficiaryData)
+      .select();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Batch create beneficiaries error:', error);
+    throw error;
+  }
+}
+
+export async function batchCreateQuestions(questions: any[], surveyId: string) {
+  try {
+    const questionData = questions.map((q, index) => ({
+      question_id: createId('q_'),
+      survey_id: surveyId,
+      order_num: index + 1,
+      ...q,
+      created_at: new Date().toISOString()
+    }));
+
+    const { data, error } = await supabase
+      .from('questions')
+      .insert(questionData)
+      .select();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Batch create questions error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Connection monitoring
+ */
+export async function monitorConnection() {
+  try {
+    const startTime = Date.now();
+    
+    const { data, error } = await supabase
+      .from('roles')
+      .select('count', { count: 'exact', head: true });
+    
+    const endTime = Date.now();
+    const responseTime = endTime - startTime;
+    
+    return {
+      isConnected: !error,
+      responseTime,
+      error: error?.message,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error: any) {
+    return {
+      isConnected: false,
+      responseTime: -1,
+      error: error.message,
+      timestamp: new Date().toISOString()
     };
   }
 }

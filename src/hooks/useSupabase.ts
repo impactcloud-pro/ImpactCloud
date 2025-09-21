@@ -6,11 +6,16 @@ import { logActivity } from '../services/database';
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any | null>(null);
 
   useEffect(() => {
     // Get initial session
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
       setLoading(false);
     });
 
@@ -18,6 +23,13 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setUserProfile(null);
+        }
+        
         setLoading(false);
 
         // Log authentication events
@@ -54,9 +66,29 @@ export function useAuth() {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [user]);
 
-  return { user, loading };
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select(`
+          *,
+          roles(name, description),
+          organizations(name, type, status)
+        `)
+        .eq('user_id', userId)
+        .single();
+
+      if (error) throw error;
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setUserProfile(null);
+    }
+  };
+
+  return { user, loading, userProfile };
 }
 
 export function useRealTimeSubscription<T>(
@@ -66,11 +98,13 @@ export function useRealTimeSubscription<T>(
 ) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Initial data fetch
     const fetchData = async () => {
       try {
+        setError(null);
         let query = supabase.from(table).select('*');
         
         if (filter) {
@@ -87,6 +121,7 @@ export function useRealTimeSubscription<T>(
         setData(initialData || []);
       } catch (error) {
         console.error(`Error fetching ${table}:`, error);
+        setError(error.message);
       } finally {
         setLoading(false);
       }
@@ -106,6 +141,7 @@ export function useRealTimeSubscription<T>(
           filter: filter
         },
         (payload) => {
+          try {
           if (callback) {
             callback(payload);
           }
@@ -122,6 +158,9 @@ export function useRealTimeSubscription<T>(
               (item as any).id !== payload.old.id
             ));
           }
+          } catch (error) {
+            console.error('Real-time subscription callback error:', error);
+          }
         }
       )
       .subscribe();
@@ -131,7 +170,7 @@ export function useRealTimeSubscription<T>(
     };
   }, [table, filter]);
 
-  return { data, loading };
+  return { data, loading, error };
 }
 
 // Custom hooks for specific entities
@@ -163,6 +202,24 @@ export function useOrganizationRequests() {
   return useRealTimeSubscription<Request>('requests');
 }
 
+// New hooks for additional entities
+export function useRoles() {
+  return useRealTimeSubscription<Role>('roles');
+}
+
+export function useSubscriptionPlans() {
+  return useRealTimeSubscription<SubscriptionPlan>('subscription_plans');
+}
+
+export function useQuestions(surveyId?: string) {
+  const filter = surveyId ? `survey_id=eq.${surveyId}` : undefined;
+  return useRealTimeSubscription<Question>('questions', filter);
+}
+
+export function useResponses(surveyId?: string) {
+  const filter = surveyId ? `survey_id=eq.${surveyId}` : undefined;
+  return useRealTimeSubscription<Response>('responses', filter);
+}
 // Export types for components
 export type {
   User,
@@ -174,5 +231,6 @@ export type {
   Transaction,
   Request,
   Role,
-  SubscriptionPlan
+  SubscriptionPlan,
+  Question
 };

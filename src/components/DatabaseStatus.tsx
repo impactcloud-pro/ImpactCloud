@@ -44,7 +44,7 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
 
       if (error) {
         setConnectionStatus('error');
-        toast.error('فشل في الاتصال بقاعدة البيانات');
+        toast.error(`فشل في الاتصال بقاعدة البيانات: ${error.message}`);
         return;
       }
 
@@ -98,16 +98,16 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
       );
 
       if (missingTables.length === 0) {
-        toast.success('قاعدة البيانات متصلة وجاهزة');
+        toast.success('قاعدة البيانات متصلة وجاهزة! جميع الجداول موجودة');
         onConnectionReady?.();
       } else {
-        toast.warning(`بعض الجداول مفقودة: ${missingTables.map(t => t.name).join(', ')}`);
+        toast.warning(`بعض الجداول الأساسية مفقودة: ${missingTables.map(t => t.name).join(', ')}`);
       }
 
     } catch (error: any) {
       console.error('Database connection error:', error);
       setConnectionStatus('error');
-      toast.error('خطأ في فحص قاعدة البيانات');
+      toast.error(`خطأ في فحص قاعدة البيانات: ${error.message}`);
     } finally {
       setIsRefreshing(false);
     }
@@ -124,6 +124,12 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
       case 'surveys': return FileText;
       case 'beneficiaries': return Users;
       case 'activity_log': return Activity;
+      case 'roles': return Users;
+      case 'subscription_plans': return Activity;
+      case 'questions': return FileText;
+      case 'responses': return Activity;
+      case 'transactions': return Activity;
+      case 'requests': return Building;
       default: return Database;
     }
   };
@@ -139,6 +145,22 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
     }
   };
 
+  const getTableDisplayName = (tableName: string) => {
+    const tableNames: Record<string, string> = {
+      'roles': 'الأدوار',
+      'subscription_plans': 'خطط الاشتراك',
+      'organizations': 'المنظمات',
+      'users': 'المستخدمين',
+      'beneficiaries': 'المستفيدين',
+      'surveys': 'الاستبيانات',
+      'questions': 'الأسئلة',
+      'responses': 'الاستجابات',
+      'activity_log': 'سجل الأنشطة',
+      'transactions': 'المعاملات',
+      'requests': 'طلبات التسجيل'
+    };
+    return tableNames[tableName] || tableName;
+  };
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -168,7 +190,7 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-800">
               <strong>خطأ في الاتصال:</strong> تعذر الاتصال بقاعدة البيانات. 
-              يرجى التحقق من إعدادات Supabase والمحاولة مرة أخرى.
+              يرجى التحقق من إعدادات Supabase في ملف .env والمحاولة مرة أخرى.
             </AlertDescription>
           </Alert>
         )}
@@ -177,7 +199,7 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              <strong>متصل بنجاح:</strong> قاعدة البيانات متصلة وجاهزة للاستخدام.
+              <strong>متصل بنجاح:</strong> قاعدة البيانات متصلة وجاهزة للاستخدام. جميع الجداول تم التحقق منها.
             </AlertDescription>
           </Alert>
         )}
@@ -200,7 +222,7 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Icon className={`h-4 w-4 ${table.exists ? 'text-green-600' : 'text-red-600'}`} />
-                      <span className="font-medium text-sm">{table.name}</span>
+                      <span className="font-medium text-sm">{getTableDisplayName(table.name)}</span>
                     </div>
                     {table.exists ? (
                       <CheckCircle className="h-4 w-4 text-green-600" />
@@ -211,7 +233,7 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
                   
                   {table.exists ? (
                     <div className="text-xs text-green-700">
-                      {table.rowCount} سجل
+                      {table.rowCount.toLocaleString('ar-SA')} سجل
                     </div>
                   ) : (
                     <div className="text-xs text-red-700">
@@ -229,9 +251,10 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
           <div className="p-4 bg-gray-50 rounded-lg">
             <h4 className="font-medium mb-2">تفاصيل الاتصال</h4>
             <div className="space-y-1 text-sm text-gray-600">
-              <div>URL: {import.meta.env.VITE_SUPABASE_URL}</div>
-              <div>المنطقة: {import.meta.env.VITE_SUPABASE_URL?.includes('supabase.co') ? 'Supabase Cloud' : 'محلي'}</div>
+              <div>URL: {supabaseUrl}</div>
+              <div>المنطقة: {supabaseUrl?.includes('supabase.co') ? 'Supabase Cloud' : 'محلي'}</div>
               <div>الحالة: {connectionStatus === 'connected' ? 'متصل' : 'غير متصل'}</div>
+              <div>المشروع: opzxyqfxsqtgfzcnkkoj</div>
             </div>
           </div>
           
@@ -240,7 +263,8 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
             <div className="space-y-1 text-sm text-gray-600">
               <div>إجمالي الجداول: {tableStatuses.length}</div>
               <div>الجداول الموجودة: {tableStatuses.filter(t => t.exists).length}</div>
-              <div>إجمالي السجلات: {tableStatuses.reduce((sum, t) => sum + t.rowCount, 0)}</div>
+              <div>إجمالي السجلات: {tableStatuses.reduce((sum, t) => sum + t.rowCount, 0).toLocaleString('ar-SA')}</div>
+              <div>معدل النجاح: {Math.round((tableStatuses.filter(t => t.exists).length / tableStatuses.length) * 100)}%</div>
             </div>
           </div>
         </div>
