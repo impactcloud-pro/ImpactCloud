@@ -37,22 +37,30 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
     setIsRefreshing(true);
     
     try {
-      // Initialize database schema if needed
-      const { initializeDatabase } = await import('../lib/supabase');
-      await initializeDatabase();
+      console.log('Testing Supabase connection...');
 
-      // Test basic connection
+      // Test basic connection first
       const { data, error } = await supabase
-        .from('roles')
-        .select('count', { count: 'exact', head: true });
+        .rpc('now');
 
       if (error) {
         setConnectionStatus('error');
-        toast.error(`فشل في الاتصال بقاعدة البيانات: ${error.message}`);
+        console.error('Basic connection failed:', error);
+        toast.error('فشل في الاتصال بقاعدة البيانات. يرجى التحقق من إعدادات Supabase.');
         return;
       }
 
-      setConnectionStatus('connected');
+      console.log('Basic connection successful');
+      
+      // Initialize database schema if needed
+      const { initializeDatabase } = await import('../lib/supabase');
+      const initialized = await initializeDatabase();
+      
+      if (!initialized) {
+        setConnectionStatus('error');
+        toast.error('فشل في تهيئة قاعدة البيانات. يرجى تشغيل Migration يدوياً في Supabase.');
+        return;
+      }
       
       // Check all tables
       const tables = [
@@ -93,6 +101,7 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
         })
       );
 
+      setConnectionStatus('connected');
       setTableStatuses(tableChecks);
       
       // Check if all essential tables exist
@@ -102,6 +111,7 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
       );
 
       if (missingTables.length === 0) {
+        console.log('All essential tables found');
         toast.success('قاعدة البيانات متصلة وجاهزة! جميع الجداول موجودة');
         onConnectionReady?.();
       } else {
@@ -111,6 +121,7 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
     } catch (error: any) {
       console.error('Database connection error:', error);
       setConnectionStatus('error');
+      toast.error('خطأ في الاتصال بقاعدة البيانات');
       toast.error(`خطأ في فحص قاعدة البيانات: ${error.message}`);
     } finally {
       setIsRefreshing(false);
@@ -193,8 +204,17 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
           <Alert className="border-red-200 bg-red-50">
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-800">
-              <strong>خطأ في الاتصال:</strong> تعذر الاتصال بقاعدة البيانات. 
-              يرجى التحقق من إعدادات Supabase في ملف .env والمحاولة مرة أخرى.
+              <strong>خطأ في الاتصال:</strong> تعذر الاتصال بقاعدة البيانات أو الجداول غير موجودة.
+              <br />
+              <strong>الحل:</strong> يرجى تشغيل Migration في Supabase SQL Editor:
+              <br />
+              1. افتح Supabase Dashboard
+              <br />
+              2. اذهب إلى SQL Editor
+              <br />
+              3. انسخ محتوى ملف supabase/migrations/complete_social_impact_schema.sql
+              <br />
+              4. شغل الـ SQL
             </AlertDescription>
           </Alert>
         )}
@@ -255,8 +275,8 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
           <div className="p-4 bg-gray-50 rounded-lg">
             <h4 className="font-medium mb-2">تفاصيل الاتصال</h4>
             <div className="space-y-1 text-sm text-gray-600">
-              <div>URL: {supabaseUrl}</div>
-              <div>المنطقة: {supabaseUrl?.includes('supabase.co') ? 'Supabase Cloud' : 'محلي'}</div>
+              <div>URL: {import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL}</div>
+              <div>المنطقة: Supabase Cloud</div>
               <div>الحالة: {connectionStatus === 'connected' ? 'متصل' : 'غير متصل'}</div>
               <div>المشروع: opzxyqfxsqtgfzcnkkoj</div>
             </div>
@@ -271,6 +291,20 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
               <div>معدل النجاح: {Math.round((tableStatuses.filter(t => t.exists).length / tableStatuses.length) * 100)}%</div>
             </div>
           </div>
+          
+          {connectionStatus === 'error' && (
+            <div className="md:col-span-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 className="font-medium mb-2 text-blue-800">خطوات الإصلاح</h4>
+              <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+                <li>افتح Supabase Dashboard على الرابط: https://supabase.com/dashboard</li>
+                <li>اختر مشروعك: opzxyqfxsqtgfzcnkkoj</li>
+                <li>اذهب إلى SQL Editor من القائمة الجانبية</li>
+                <li>انسخ محتوى ملف supabase/migrations/complete_social_impact_schema.sql</li>
+                <li>الصق المحتوى في SQL Editor واضغط Run</li>
+                <li>ارجع هنا واضغط "تحديث" للتحقق من الاتصال</li>
+              </ol>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

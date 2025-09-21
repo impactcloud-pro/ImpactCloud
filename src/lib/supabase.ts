@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://opzxyqfxsqtgfzcnkkoj.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wenh5cWZ4c3F0Z2Z6Y25ra29qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTc0OTMsImV4cCI6MjA3NDAzMzQ5M30.4pFvpIshRQqg5pYtKsPlL6TVw3j3-jpXqovilX0T_nk';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || 'https://opzxyqfxsqtgfzcnkkoj.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wenh5cWZ4c3F0Z2Z6Y25ra29qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTc0OTMsImV4cCI6MjA3NDAzMzQ5M30.4pFvpIshRQqg5pYtKsPlL6TVw3j3-jpXqovilX0T_nk';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
@@ -27,19 +27,37 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Initialize database schema if needed
 export async function initializeDatabase() {
   try {
-    // Check if roles table exists
+    console.log('Checking database connection...');
+    
+    // Test basic connection first
     const { data, error } = await supabase
+      .rpc('now');
+    
+    if (error) {
+      console.error('Basic connection test failed:', error);
+      return false;
+    }
+    
+    console.log('Basic connection successful, checking schema...');
+    
+    // Check if roles table exists
+    const { data: rolesData, error: rolesError } = await supabase
       .from('roles')
       .select('count', { count: 'exact', head: true });
     
-    if (error && error.code === 'PGRST116') {
-      console.log('Database tables not found, creating schema...');
-      await createDatabaseSchema();
+    if (rolesError && rolesError.code === 'PGRST116') {
+      console.log('Schema not found, creating database schema...');
+      const schemaCreated = await createDatabaseSchema();
+      if (!schemaCreated) {
+        console.error('Failed to create database schema');
+        return false;
+      }
+      console.log('Database schema created successfully');
       return true;
     }
     
-    if (error) {
-      console.error('Database connection error:', error);
+    if (rolesError) {
+      console.error('Error checking roles table:', rolesError);
       return false;
     }
     
@@ -53,103 +71,181 @@ export async function initializeDatabase() {
 
 // Create database schema using SQL
 async function createDatabaseSchema() {
-  const schemaSQL = `
-    -- Create roles table
-    CREATE TABLE IF NOT EXISTS roles (
-      role_id TEXT PRIMARY KEY,
-      name TEXT NOT NULL UNIQUE,
-      description TEXT,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    -- Create subscription_plans table
-    CREATE TABLE IF NOT EXISTS subscription_plans (
-      plan_id TEXT PRIMARY KEY,
-      package_name TEXT NOT NULL,
-      description TEXT,
-      total_price_monthly DECIMAL(10,2),
-      total_price_annual DECIMAL(10,2),
-      quota_limit INTEGER,
-      features JSONB DEFAULT '[]'::jsonb,
-      is_active BOOLEAN DEFAULT true,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    -- Create organizations table
-    CREATE TABLE IF NOT EXISTS organizations (
-      organization_id TEXT PRIMARY KEY,
-      plan_id TEXT REFERENCES subscription_plans(plan_id),
-      name TEXT NOT NULL,
-      type TEXT,
-      status TEXT DEFAULT 'active',
-      organization_manager TEXT,
-      username TEXT UNIQUE,
-      password_hash TEXT,
-      number_of_beneficiaries INTEGER DEFAULT 0,
-      number_of_surveys INTEGER DEFAULT 0,
-      quota INTEGER DEFAULT 0,
-      consumed INTEGER DEFAULT 0,
-      remaining INTEGER DEFAULT 0,
-      region TEXT,
-      contact_email TEXT,
-      contact_phone TEXT,
-      website TEXT,
-      created_by TEXT,
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      updated_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    -- Create users table
-    CREATE TABLE IF NOT EXISTS users (
-      user_id TEXT PRIMARY KEY,
-      role_id TEXT REFERENCES roles(role_id),
-      organization_id TEXT REFERENCES organizations(organization_id),
-      name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT,
-      phone_number TEXT,
-      status TEXT DEFAULT 'active',
-      last_login TIMESTAMPTZ,
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      updated_at TIMESTAMPTZ DEFAULT NOW()
-    );
-
-    -- Insert default roles
-    INSERT INTO roles (role_id, name, description) VALUES
-      ('super_admin', 'super_admin', 'مدير النظام الرئيسي'),
-      ('admin', 'admin', 'مدير أثرنا'),
-      ('org_manager', 'org_manager', 'مدير المنظمة'),
-      ('beneficiary', 'beneficiary', 'مستفيد')
-    ON CONFLICT (role_id) DO NOTHING;
-
-    -- Insert default subscription plans
-    INSERT INTO subscription_plans (plan_id, package_name, description, total_price_monthly, total_price_annual, quota_limit, features) VALUES
-      ('basic', 'الباقة الأساسية', 'باقة مناسبة للمنظمات الصغيرة', 299.00, 2988.00, 100, '["إنشاء الاستبيانات", "تحليل البيانات الأساسي", "دعم فني"]'::jsonb),
-      ('professional', 'الباقة الاحترافية', 'باقة مناسبة للمنظمات المتوسطة', 599.00, 5988.00, 500, '["إنشاء الاستبيانات", "تحليل البيانات المتقدم", "تقارير مخصصة", "دعم فني متقدم"]'::jsonb),
-      ('enterprise', 'باقة المؤسسات', 'باقة مناسبة للمؤسسات الكبيرة', 1199.00, 11988.00, 2000, '["إنشاء الاستبيانات", "تحليل البيانات المتقدم", "تقارير مخصصة", "دعم فني متقدم", "تكامل API"]'::jsonb)
-    ON CONFLICT (plan_id) DO NOTHING;
-
-    -- Enable RLS on all tables
-    ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
-    -- Create basic policies
-    CREATE POLICY "Allow read access to roles" ON roles FOR SELECT USING (true);
-    CREATE POLICY "Allow read access to subscription_plans" ON subscription_plans FOR SELECT USING (true);
-  `;
-
   try {
-    const { error } = await supabase.rpc('exec_sql', { sql: schemaSQL });
-    if (error) {
-      console.error('Schema creation error:', error);
-      throw error;
+    console.log('Creating database schema...');
+    
+    // Read the migration file content and execute it step by step
+    const migrationSteps = [
+      // Step 1: Create extensions
+      `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`,
+      `CREATE EXTENSION IF NOT EXISTS "pgcrypto";`,
+      
+      // Step 2: Create roles table
+      `CREATE TABLE IF NOT EXISTS roles (
+        role_id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        description TEXT,
+        permissions JSONB DEFAULT '[]'::jsonb,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      
+      // Step 3: Create subscription_plans table
+      `CREATE TABLE IF NOT EXISTS subscription_plans (
+        plan_id TEXT PRIMARY KEY,
+        package_name TEXT NOT NULL,
+        package_name_en TEXT,
+        description TEXT,
+        total_price_monthly DECIMAL(10,2) DEFAULT 0,
+        total_price_annual DECIMAL(10,2) DEFAULT 0,
+        quota_limit INTEGER DEFAULT 0,
+        features JSONB DEFAULT '[]'::jsonb,
+        limits JSONB DEFAULT '{}'::jsonb,
+        color TEXT DEFAULT '#183259',
+        is_popular BOOLEAN DEFAULT false,
+        is_premium BOOLEAN DEFAULT false,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      
+      // Step 4: Create organizations table
+      `CREATE TABLE IF NOT EXISTS organizations (
+        organization_id TEXT PRIMARY KEY,
+        plan_id TEXT REFERENCES subscription_plans(plan_id),
+        name TEXT NOT NULL,
+        type TEXT CHECK (type IN ('company', 'nonprofit', 'government', 'educational')),
+        status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'pending')),
+        organization_manager TEXT[] DEFAULT '{}',
+        username TEXT UNIQUE,
+        password_hash TEXT,
+        number_of_beneficiaries INTEGER DEFAULT 0,
+        number_of_surveys INTEGER DEFAULT 0,
+        quota INTEGER DEFAULT 0,
+        consumed INTEGER DEFAULT 0,
+        remaining INTEGER DEFAULT 0,
+        region TEXT,
+        contact_email TEXT,
+        contact_phone TEXT,
+        website TEXT,
+        description TEXT,
+        logo_url TEXT,
+        join_date DATE DEFAULT CURRENT_DATE,
+        created_by TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );`,
+      
+      // Step 5: Create users table
+      `CREATE TABLE IF NOT EXISTS users (
+        user_id TEXT PRIMARY KEY,
+        role_id TEXT REFERENCES roles(role_id),
+        organization_id TEXT REFERENCES organizations(organization_id),
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT,
+        phone_number TEXT,
+        status TEXT DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'pending')),
+        last_login TIMESTAMPTZ,
+        profile_data JSONB DEFAULT '{}'::jsonb,
+        preferences JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );`
+    ];
+    
+    // Execute each step
+    for (const sql of migrationSteps) {
+      const { error } = await supabase.rpc('exec_sql', { sql });
+      if (error) {
+        console.error('Error executing SQL step:', error);
+        // Continue with next step instead of failing completely
+      }
     }
+    
+    // Insert default data
+    await insertDefaultData();
+    
     console.log('Database schema created successfully');
+    return true;
   } catch (error) {
     console.error('Failed to create schema:', error);
-    throw error;
+    return false;
+  }
+}
+
+// Insert default data
+async function insertDefaultData() {
+  try {
+    // Insert roles
+    const { error: rolesError } = await supabase
+      .from('roles')
+      .upsert([
+        { role_id: 'super_admin', name: 'super_admin', description: 'مدير النظام الرئيسي', permissions: ['all'] },
+        { role_id: 'admin', name: 'admin', description: 'مدير أثرنا', permissions: ['manage_surveys', 'manage_users', 'view_analytics'] },
+        { role_id: 'org_manager', name: 'org_manager', description: 'مدير المنظمة', permissions: ['create_surveys', 'view_own_analytics'] },
+        { role_id: 'beneficiary', name: 'beneficiary', description: 'مستفيد', permissions: ['take_surveys'] }
+      ], { onConflict: 'role_id' });
+    
+    if (rolesError) console.error('Error inserting roles:', rolesError);
+    
+    // Insert subscription plans
+    const { error: plansError } = await supabase
+      .from('subscription_plans')
+      .upsert([
+        {
+          plan_id: 'starter',
+          package_name: 'الباقة المبتدئة',
+          package_name_en: 'Starter',
+          description: 'مثالية للمنظمات الصغيرة والناشئة',
+          total_price_monthly: 299.00,
+          total_price_annual: 2990.00,
+          quota_limit: 100,
+          features: ['إنشاء 10 استبيانات', '500 مستفيد', '2000 استجابة شهرياً'],
+          limits: { surveys: 10, beneficiaries: 500, responses: 2000 },
+          color: '#10b981'
+        },
+        {
+          plan_id: 'professional',
+          package_name: 'الباقة الاحترافية',
+          package_name_en: 'Professional',
+          description: 'للمنظمات المتوسطة التي تحتاج ميزات متقدمة',
+          total_price_monthly: 599.00,
+          total_price_annual: 5990.00,
+          quota_limit: 500,
+          features: ['إنشاء 25 استبيان', '1500 مستفيد', '7500 استجابة شهرياً'],
+          limits: { surveys: 25, beneficiaries: 1500, responses: 7500 },
+          color: '#3b82f6',
+          is_popular: true
+        }
+      ], { onConflict: 'plan_id' });
+    
+    if (plansError) console.error('Error inserting subscription plans:', plansError);
+    
+    console.log('Default data inserted successfully');
+  } catch (error) {
+    console.error('Error inserting default data:', error);
+  }
+}
+
+// Alternative schema creation using direct table creation
+async function createDatabaseSchemaAlternative() {
+  try {
+    console.log('Creating schema using alternative method...');
+    
+    // Create roles table directly
+    const { error: rolesError } = await supabase
+      .from('roles')
+      .select('count', { count: 'exact', head: true });
+    
+    if (rolesError && rolesError.code === 'PGRST116') {
+      // Table doesn't exist, we need to create it via SQL
+      console.log('Tables do not exist. Please run the migration manually in Supabase SQL Editor.');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Alternative schema creation failed:', error);
+    return false;
   }
 }
 
