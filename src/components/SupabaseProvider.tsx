@@ -88,27 +88,7 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
         }
         
         setLoading(false);
-        
-        // Log authentication events
-        if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            await logActivity({
-              log_id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-              user_id: session.user.id,
-              action: 'تسجيل دخول',
-              details: 'تم تسجيل الدخول بنجاح',
-              ip_address: null,
-              user_agent: navigator.userAgent
-            });
-          } catch (error) {
-            console.error('Failed to log sign in activity:', error);
-          }
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
+  // Remove automatic database testing to avoid errors
 
   const fetchUserProfile = async (userId: string) => {
     try {

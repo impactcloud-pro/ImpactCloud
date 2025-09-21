@@ -360,12 +360,11 @@ export default function App(): JSX.Element {
       <FaviconUpdater />
       <SupabaseProvider>
         {/* Database Status Check */}
-        {(showDatabaseStatus || !isDatabaseReady) && (
+        {showDatabaseStatus && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <DatabaseStatus onConnectionReady={() => {
               setIsDatabaseReady(true);
               setShowDatabaseStatus(false);
-              toast.success('قاعدة البيانات جاهزة للاستخدام!');
             }} />
           </div>
         )}
