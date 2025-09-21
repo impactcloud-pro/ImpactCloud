@@ -39,28 +39,18 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
     try {
       console.log('Testing Supabase connection...');
 
-      // Test basic connection first
-      const { data, error } = await supabase
+      // Test basic connection using RPC
+      const { error: basicError } = await supabase
         .rpc('now');
 
-      if (error) {
+      if (basicError) {
         setConnectionStatus('error');
-        console.error('Basic connection failed:', error);
+        console.error('Basic connection failed:', basicError);
         toast.error('فشل في الاتصال بقاعدة البيانات. يرجى التحقق من إعدادات Supabase.');
         return;
       }
 
       console.log('Basic connection successful');
-      
-      // Initialize database schema if needed
-      const { initializeDatabase } = await import('../lib/supabase');
-      const initialized = await initializeDatabase();
-      
-      if (!initialized) {
-        setConnectionStatus('error');
-        toast.error('فشل في تهيئة قاعدة البيانات. يرجى تشغيل Migration يدوياً في Supabase.');
-        return;
-      }
       
       // Check all tables
       const tables = [
@@ -84,11 +74,30 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
               .from(tableName)
               .select('*', { count: 'exact', head: true });
 
+            if (error && error.code === 'PGRST116') {
+              // Table doesn't exist
+              return {
+                name: tableName,
+                exists: false,
+                rowCount: 0,
+                error: 'الجدول غير موجود'
+              };
+            }
+
+            if (error) {
+              return {
+                name: tableName,
+                exists: false,
+                rowCount: 0,
+                error: error.message
+              };
+            }
+
             return {
               name: tableName,
-              exists: !error,
+              exists: true,
               rowCount: count || 0,
-              error: error?.message
+              error: undefined
             };
           } catch (err: any) {
             return {
@@ -110,18 +119,18 @@ export function DatabaseStatus({ onConnectionReady }: DatabaseStatusProps) {
         table => essentialTables.includes(table.name) && !table.exists
       );
 
-      if (missingTables.length === 0) {
+      if (missingTables.length > 0) {
+        toast.warning(`الجداول الأساسية مفقودة: ${missingTables.map(t => getTableDisplayName(t.name)).join(', ')}`);
+        toast.info('يرجى تشغيل Migration في Supabase SQL Editor');
+      } else {
         console.log('All essential tables found');
         toast.success('قاعدة البيانات متصلة وجاهزة! جميع الجداول موجودة');
         onConnectionReady?.();
-      } else {
-        toast.warning(`بعض الجداول الأساسية مفقودة: ${missingTables.map(t => t.name).join(', ')}`);
       }
 
     } catch (error: any) {
       console.error('Database connection error:', error);
       setConnectionStatus('error');
-      toast.error('خطأ في الاتصال بقاعدة البيانات');
       toast.error(`خطأ في فحص قاعدة البيانات: ${error.message}`);
     } finally {
       setIsRefreshing(false);

@@ -252,22 +252,15 @@ async function createDatabaseSchemaAlternative() {
 // Test connection function
 export async function testSupabaseConnection() {
   try {
-    // First try to initialize database if needed
-    const initialized = await initializeDatabase();
-    if (!initialized) {
-      return false;
-    }
-
-    const { data, error } = await supabase
-      .from('roles')
-      .select('count', { count: 'exact', head: true });
+    // Test basic connection first
+    const { error } = await supabase.rpc('now');
     
     if (error) {
-      console.error('Supabase connection test failed:', error);
+      console.error('Supabase basic connection failed:', error);
       return false;
     }
     
-    console.log('Supabase connection successful');
+    console.log('Supabase basic connection successful');
     return true;
   } catch (error) {
     console.error('Supabase connection error:', error);

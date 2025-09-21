@@ -35,19 +35,18 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Test connection first
+    // Test basic connection without checking specific tables
     const testConnection = async () => {
       try {
-        const { data, error } = await supabase
-          .from('roles')
-          .select('count', { count: 'exact', head: true });
+        // Test basic connection using a simple RPC call
+        const { error } = await supabase.rpc('now');
         
         if (!error) {
           setIsConnected(true);
-          console.log('Supabase connection established successfully');
+          console.log('Supabase basic connection established');
         } else {
           setIsConnected(false);
-          console.error('Supabase connection failed:', error);
+          console.error('Supabase basic connection failed:', error);
         }
       } catch (error) {
         setIsConnected(false);
