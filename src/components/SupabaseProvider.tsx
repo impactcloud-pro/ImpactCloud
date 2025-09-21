@@ -89,9 +89,10 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
         
         setLoading(false);
       }
-    )
-  }
-  )
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
   // Remove automatic database testing to avoid errors
 
   const fetchUserProfile = async (userId: string) => {
