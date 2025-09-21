@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { SupabaseProvider } from './components/SupabaseProvider';
+import { DatabaseStatus } from './components/DatabaseStatus';
 import { Layout } from './components/Layout';
 import { LandingPage } from './components/LandingPage';
 import { LoginPage } from './components/LoginPage';
@@ -8,6 +10,9 @@ import { LanguageToggle } from './components/LanguageToggle';
 import { FaviconUpdater } from './components/FaviconUpdater';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner@2.0.3';
+
+// Import Supabase services
+import { useAuth } from './hooks/useSupabase';
 
 // Import database functions
 import { 
@@ -41,6 +46,8 @@ export default function App(): JSX.Element {
   });
   const [createdSurveys, setCreatedSurveys] = useState<Survey[]>([]);
   const [databaseVersion, setDatabaseVersion] = useState(0);
+  const [isDatabaseReady, setIsDatabaseReady] = useState(false);
+  const [showDatabaseStatus, setShowDatabaseStatus] = useState(false);
 
   // Initialize URL routing
   useEffect(() => {
@@ -326,9 +333,46 @@ export default function App(): JSX.Element {
   return (
     <div className="min-h-screen bg-background text-foreground" dir="rtl">
       <FaviconUpdater />
-      {!currentUser && (currentPage === 'landing' || currentPage === 'org-registration') ? (
-        <>
-          {renderPage()}
+      <SupabaseProvider>
+        {/* Database Status Check */}
+        {showDatabaseStatus && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <DatabaseStatus onConnectionReady={() => {
+              setIsDatabaseReady(true);
+              setShowDatabaseStatus(false);
+            }} />
+          </div>
+        )}
+
+        {!currentUser && (currentPage === 'landing' || currentPage === 'org-registration') ? (
+          <>
+            {renderPage()}
+            <Toaster 
+              position="top-center"
+              dir="rtl"
+              toastOptions={{
+                style: {
+                  fontFamily: 'Cairo, IBM Plex Arabic, Noto Sans Arabic, Inter, sans-serif',
+                  textAlign: 'right',
+                  direction: 'rtl'
+                }
+              }}
+            />
+          </>
+        ) : (
+          <Layout
+            currentPage={currentPage}
+            userRole={currentUser?.role || 'beneficiary'}
+            userName={currentUser?.name || ''}
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+            onGoToLanding={handleGoToLanding}
+          >
+            {renderPage()}
+          </Layout>
+        )}
+        
+        {currentUser && (
           <Toaster 
             position="top-center"
             dir="rtl"
@@ -340,33 +384,8 @@ export default function App(): JSX.Element {
               }
             }}
           />
-        </>
-      ) : (
-        <Layout
-          currentPage={currentPage}
-          userRole={currentUser?.role || 'beneficiary'}
-          userName={currentUser?.name || ''}
-          onNavigate={handleNavigate}
-          onLogout={handleLogout}
-          onGoToLanding={handleGoToLanding}
-        >
-          {renderPage()}
-        </Layout>
-      )}
-      
-      {currentUser && (
-        <Toaster 
-          position="top-center"
-          dir="rtl"
-          toastOptions={{
-            style: {
-              fontFamily: 'Cairo, IBM Plex Arabic, Noto Sans Arabic, Inter, sans-serif',
-              textAlign: 'right',
-              direction: 'rtl'
-            }
-          }}
-        />
-      )}
+        )}
+      </SupabaseProvider>
 
       <ForgotPasswordModal 
         isOpen={showForgotPassword}
