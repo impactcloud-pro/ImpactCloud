@@ -69,7 +69,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
               variant="light"
               className="cursor-pointer transform hover:scale-105 transition-transform duration-200"
             />
-            </div>
           </div>
         </div>
 
