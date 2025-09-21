@@ -252,8 +252,8 @@ async function createDatabaseSchemaAlternative() {
 // Test connection function
 export async function testSupabaseConnection() {
   try {
-    // Test basic connection first
-    const { error } = await supabase.rpc('now');
+    // Test basic connection using auth endpoint
+    const { data, error } = await supabase.auth.getSession();
     
     if (error) {
       console.error('Supabase basic connection failed:', error);

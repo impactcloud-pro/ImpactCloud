@@ -38,8 +38,8 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
     // Test basic connection without checking specific tables
     const testConnection = async () => {
       try {
-        // Test basic connection using a simple RPC call
-        const { error } = await supabase.rpc('now');
+        // Test basic connection using auth session
+        const { data, error } = await supabase.auth.getSession();
         
         if (!error) {
           setIsConnected(true);
