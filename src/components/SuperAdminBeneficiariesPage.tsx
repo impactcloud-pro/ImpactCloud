@@ -38,7 +38,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { EnhancedPageLayout } from './EnhancedPageLayout';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface Organization {
   id: string;
