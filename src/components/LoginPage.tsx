@@ -94,6 +94,16 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {/* Test Users Info */}
+            <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-3 text-blue-200 text-sm">
+              <p className="font-semibold mb-2">حسابات تجريبية:</p>
+              <div className="space-y-1 text-xs">
+                <p>• superadmin@system.com / SuperAdmin123!</p>
+                <p>• admin@atharonaa.com / Admin123!</p>
+                <p>• manager@organization.com / Manager123!</p>
+              </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">البريد الإلكتروني</Label>

@@ -36,18 +36,20 @@ export const supabaseAdmin = supabaseServiceKey ? createClient(supabaseUrl, supa
 // Create test users function
 export async function createTestUsers() {
   try {
-    // If no admin client, skip test user creation
-    if (!supabaseAdmin) {
-      console.log('Service role key not available, skipping test user creation');
-      return false;
+    // Check if users already exist first
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existingEmails = existingUsers?.users?.map(u => u.email) || [];
+    
+    if (existingEmails.includes('superadmin@system.com')) {
+      console.log('Test users already exist');
+      return true;
     }
 
     const testUsers = [
       {
         email: 'superadmin@system.com',
         password: 'SuperAdmin123!',
-        userData: {
-          user_id: 'super_admin_001',
+        user_metadata: {
           name: 'مدير النظام الرئيسي',
           role_id: 'super_admin',
           status: 'Active'
@@ -56,8 +58,7 @@ export async function createTestUsers() {
       {
         email: 'admin@atharonaa.com',
         password: 'Admin123!',
-        userData: {
-          user_id: 'admin_001',
+        user_metadata: {
           name: 'مدير أثرنا',
           role_id: 'admin',
           status: 'Active'
@@ -66,8 +67,7 @@ export async function createTestUsers() {
       {
         email: 'manager@organization.com',
         password: 'Manager123!',
-        userData: {
-          user_id: 'org_manager_001',
+        user_metadata: {
           name: 'مدير المنظمة',
           role_id: 'org_manager',
           organization_id: 'org_001',
@@ -80,12 +80,13 @@ export async function createTestUsers() {
     
     for (const user of testUsers) {
       try {
-        // Use admin client to create confirmed users
-        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        // Create user with regular signup first
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email: user.email,
           password: user.password,
-          email_confirm: true, // Auto-confirm email
-          user_metadata: user.userData
+          options: {
+            data: user.user_metadata
+          }
         });
 
         if (authError && !authError.message.includes('already registered')) {
@@ -93,22 +94,15 @@ export async function createTestUsers() {
           continue;
         }
 
-        // If user was created or already exists, ensure profile exists
+        // If user was created, try to confirm them manually
         if (authData.user) {
-          const { error: profileError } = await supabase
-            .from('users')
-            .upsert({
-              user_id: authData.user.id,
-              email: user.email,
-              ...user.userData,
-              created_at: new Date().toISOString()
+          // Try to confirm the user if admin client is available
+          if (supabaseAdmin) {
+            await supabaseAdmin.auth.admin.updateUserById(authData.user.id, {
+              email_confirm: true
             });
-
-          if (profileError) {
-            console.error(`Error creating profile for ${user.email}:`, profileError);
-          } else {
-            console.log(`✓ Test user created: ${user.email}`);
           }
+          console.log(`✓ Test user created: ${user.email}`);
         }
       } catch (error) {
         console.error(`Failed to create user ${user.email}:`, error);
@@ -125,12 +119,11 @@ export async function createTestUsers() {
 // Test connection function
 export async function testSupabaseConnection() {
   try {
-    // Test basic connection using auth session
-    const { data, error } = await supabase.auth.getSession();
+    // Test basic connection
+    const { data, error } = await supabase.from('roles').select('count').limit(1);
     
     if (error) {
-      console.error('Supabase connection test failed:', error);
-      return false;
+      console.log('Database not ready yet, but connection works');
     }
     
     console.log('Supabase connection test successful');

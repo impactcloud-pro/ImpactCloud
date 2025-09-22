@@ -12,7 +12,7 @@ import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner@2.0.3';
 
 // Import Supabase services
-import { useAuth } from './hooks/useSupabase';
+// Removed duplicate useAuth import - using the one from './hooks/useAuth'
 
 // Import database functions
 import { 
