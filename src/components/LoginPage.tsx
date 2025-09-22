@@ -181,29 +181,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
               </Button>
             </form>
 
-            {/* Test Users Section for Development */}
-            <div className="mt-6 pt-4 border-t border-white/20">
-              <p className="text-white/70 text-sm mb-3 text-center">حسابات تجريبية للاختبار:</p>
-              <div className="space-y-2">
-                {testUsers.map((testUser, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleTestLogin(testUser.email, testUser.password)}
-                    className="w-full text-xs bg-white/5 border-white/20 text-white hover:bg-white/10 justify-start"
-                    disabled={loading}
-                  >
-                    <User className="h-3 w-3 ml-2" />
-                    {testUser.role} - {testUser.email}
-                  </Button>
-                ))}
-              </div>
-              <p className="text-white/50 text-xs mt-2 text-center">
-                انقر على أي حساب لملء البيانات تلقائياً
-              </p>
-            </div>
-
           </CardContent>
         </Card>
       </div>

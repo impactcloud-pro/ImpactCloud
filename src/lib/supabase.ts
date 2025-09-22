@@ -38,22 +38,28 @@ export async function createTestUsers() {
   try {
     const testUsers = [
       {
-        email: 'superadmin@system.com',
-        password: 'SuperAdmin123!',
+        email: 'admin@test.com',
+        password: 'admin123',
         name: 'مدير النظام الرئيسي',
         role_id: 'super_admin'
       },
       {
-        email: 'admin@atharonaa.com',
-        password: 'Admin123!',
+        email: 'manager@test.com',
+        password: 'manager123',
         name: 'مدير أثرنا',
         role_id: 'admin'
       },
       {
-        email: 'manager@organization.com',
-        password: 'Manager123!',
+        email: 'org@test.com',
+        password: 'org123',
         name: 'مدير المنظمة',
         role_id: 'org_manager'
+      },
+      {
+        email: 'user@test.com',
+        password: 'user123',
+        name: 'مستفيد',
+        role_id: 'beneficiary'
       }
     ];
 
