@@ -38,28 +38,22 @@ export async function createTestUsers() {
   try {
     const testUsers = [
       {
-        email: 'admin@test.com',
-        password: 'admin123',
+        email: 'admin@test.com', 
+        password: 'password123',
         name: 'مدير النظام الرئيسي',
         role_id: 'super_admin'
       },
       {
         email: 'manager@test.com',
-        password: 'manager123',
-        name: 'مدير أثرنا',
-        role_id: 'admin'
-      },
-      {
-        email: 'org@test.com',
-        password: 'org123',
+        password: 'password123', 
         name: 'مدير المنظمة',
         role_id: 'org_manager'
       },
       {
         email: 'user@test.com',
-        password: 'user123',
-        name: 'مستفيد',
-        role_id: 'beneficiary'
+        password: 'password123',
+        name: 'مدير أثرنا', 
+        role_id: 'admin'
       }
     ];
 
@@ -67,20 +61,10 @@ export async function createTestUsers() {
     
     for (const user of testUsers) {
       try {
-        // Check if user already exists
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select('email')
-          .eq('email', user.email)
-          .single();
-
-        if (existingUser) {
-          console.log(`User ${user.email} already exists`);
-          continue;
-        }
-
-        // Use admin client to create confirmed user
+        // Try to create user with admin client first (if service key available)
         if (supabaseAdmin) {
+          console.log(`Creating user with admin client: ${user.email}`);
+          
           const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.createUser({
             email: user.email,
             password: user.password,
@@ -92,12 +76,17 @@ export async function createTestUsers() {
           });
 
           if (adminError) {
-            console.error(`Admin create error for ${user.email}:`, adminError);
-            continue;
+            if (adminError.message?.includes('already registered')) {
+              console.log(`User ${user.email} already exists`);
+              continue;
+            }
+            throw adminError;
           }
 
           // Create user profile in database
           if (adminData.user) {
+            console.log(`Creating profile for user: ${user.email}`);
+            
             const { error: profileError } = await supabase
               .from('users')
               .insert({
@@ -109,13 +98,16 @@ export async function createTestUsers() {
               });
 
             if (profileError) {
-              console.error(`Profile creation error for ${user.email}:`, profileError);
+              if (!profileError.message?.includes('duplicate key')) {
+                console.error(`Profile creation error for ${user.email}:`, profileError);
+              }
             } else {
               console.log(`✓ Test user created successfully: ${user.email}`);
             }
           }
         } else {
-          // Fallback: regular signup (will need manual confirmation)
+          console.log(`Creating user with regular signup: ${user.email}`);
+          
           const { data: signupData, error: signupError } = await supabase.auth.signUp({
             email: user.email,
             password: user.password,
@@ -127,17 +119,25 @@ export async function createTestUsers() {
             }
           });
 
-          if (signupError && !signupError.message.includes('already registered')) {
-            console.error(`Signup error for ${user.email}:`, signupError);
-          } else if (signupData.user) {
-            console.log(`✓ Test user signed up (needs confirmation): ${user.email}`);
+          if (signupError) {
+            if (signupError.message?.includes('already registered')) {
+              console.log(`User ${user.email} already exists`);
+              continue;
+            }
+            throw signupError;
+          }
+          
+          if (signupData.user) {
+            console.log(`✓ Test user signed up: ${user.email}`);
           }
         }
       } catch (error) {
         console.error(`Failed to create user ${user.email}:`, error);
+        // Continue with next user instead of stopping
       }
     }
 
+    console.log('Test user creation completed');
     return true;
   } catch (error) {
     console.error('Error creating test users:', error);
