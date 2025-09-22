@@ -3,23 +3,7 @@ import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Logo } from './Logo';
 import { useAuth } from '../hooks/useAuth';
-import { 
-  BarChart3,
-  Users,
-  FileText,
-  CreditCard,
-  LogOut,
-  LucideIcon,
-  Bot,
-  Building,
-  Activity,
-  Settings,
-  Edit,
-  User,
-  ClipboardList,
-  ChevronDown,
-  ChevronLeft
-} from 'lucide-react';
+import { BarChart3, Users, FileText, CreditCard, LogOut, DivideIcon as LucideIcon, Bot, Building, Activity, Settings, Edit, User, ClipboardList, ChevronDown, ChevronLeft } from 'lucide-react';
 import type { UserRole } from '../App';
 import { getPageTitle } from './PageTitles';
 import { AIChatWidget } from './AIChatWidget';
