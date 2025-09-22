@@ -77,32 +77,26 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
 
   const handleTestLogin = (testEmail: string, testPassword: string) => {
     setEmail(testEmail);
-            {/* Setup Section for Development */}
-            <div className="mt-6 pt-6 border-t border-white/20">
-              <div className="text-center space-y-4">
-                <p className="text-sm text-blue-200">
-                  للاختبار: إنشاء المستخدمين التجريبيين
-                </p>
-                <Button
-                  onClick={handleCreateTestUsers}
-                  disabled={isCreatingUsers}
-                  variant="outline"
-                  className="w-full border-white/30 text-white hover:bg-white/10"
-                >
-                  {isCreatingUsers ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      جاري إنشاء المستخدمين...
-                    </div>
-                  ) : (
-                    'إنشاء المستخدمين التجريبيين'
-                  )}
-                </Button>
-              </div>
-            </div>
+    setPassword(testPassword);
+  };
 
-          </CardContent>
-        </Card>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#18325A] via-[#2A4A7A] to-[#1E3A5F] flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        {/* Logo and Header */}
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <button onClick={onLogoClick} className="transition-transform hover:scale-105">
+              <Logo className="h-16 w-auto" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-white">مرحباً بك</h1>
+            <p className="text-blue-200">سجل دخولك للوصول إلى حسابك</p>
+          </div>
+          <LanguageToggle />
+        </div>
+
         {/* Login Form */}
         <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl">
           <CardHeader className="space-y-1 pb-4">
@@ -182,39 +176,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
 
               <Button
                 type="submit"
-          {/* Setup Section for Development */}
-          <div className="mt-6 pt-6 border-t border-white/20">
-            <div className="text-center space-y-4">
-              <p className="text-sm text-blue-200">
-                للاختبار: إنشاء المستخدمين التجريبيين
-              </p>
-              <Button
-                onClick={handleCreateTestUsers}
-                disabled={isCreatingUsers}
-                variant="outline"
-                className="w-full border-white/30 text-white hover:bg-white/10"
-              >
-                {isCreatingUsers ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    جاري إنشاء المستخدمين...
-                  </div>
-                ) : (
-                  'إنشاء المستخدمين التجريبيين'
-                )}
-              </Button>
-              
-              {/* Test Credentials */}
-              <div className="bg-white/5 rounded-lg p-4 text-xs text-blue-200">
-                <p className="font-semibold mb-2">بيانات الاختبار:</p>
-                <div className="space-y-1 text-left" dir="ltr">
-                  <p>admin@test.com / password123 (Super Admin)</p>
-                  <p>manager@test.com / password123 (Org Manager)</p>
-                  <p>user@test.com / password123 (Admin)</p>
-                </div>
-              </div>
-            </div>
-          </div>
                 disabled={loading}
                 className="w-full bg-white text-[#18325A] hover:bg-gray-100 h-11 font-semibold"
               >
@@ -231,6 +192,40 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
                 )}
               </Button>
             </form>
+
+            {/* Setup Section for Development */}
+            <div className="mt-6 pt-6 border-t border-white/20">
+              <div className="text-center space-y-4">
+                <p className="text-sm text-blue-200">
+                  للاختبار: إنشاء المستخدمين التجريبيين
+                </p>
+                <Button
+                  onClick={handleCreateTestUsers}
+                  disabled={isCreatingUsers}
+                  variant="outline"
+                  className="w-full border-white/30 text-white hover:bg-white/10"
+                >
+                  {isCreatingUsers ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      جاري إنشاء المستخدمين...
+                    </div>
+                  ) : (
+                    'إنشاء المستخدمين التجريبيين'
+                  )}
+                </Button>
+                
+                {/* Test Credentials */}
+                <div className="bg-white/5 rounded-lg p-4 text-xs text-blue-200">
+                  <p className="font-semibold mb-2">بيانات الاختبار:</p>
+                  <div className="space-y-1 text-left" dir="ltr">
+                    <p>admin@test.com / password123 (Super Admin)</p>
+                    <p>manager@test.com / password123 (Org Manager)</p>
+                    <p>user@test.com / password123 (Admin)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
           </CardContent>
         </Card>
