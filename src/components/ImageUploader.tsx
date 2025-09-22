@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Button } from './ui/button';
 import { Upload, ImageIcon, X } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface ImageUploaderProps {
   onImageUpload: (imageUrl: string) => void;
