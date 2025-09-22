@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SupabaseProvider } from './components/SupabaseProvider';
+import { useAuth } from './hooks/useAuth';
 import { DatabaseStatus } from './components/DatabaseStatus';
 import { Layout } from './components/Layout';
 import { LandingPage } from './components/LandingPage';
@@ -110,19 +111,8 @@ export default function App(): JSX.Element {
   };
 
   const handleLogin = (loginInput: string, password: string): void => {
-    // First try demo authentication for development
-    const user = authenticateUser(loginInput, password);
-    
-    if (user) {
-      setCurrentUser(user);
-      const defaultPage = getDefaultPageForRole(user.role);
-      setCurrentPage(defaultPage);
-      updateUrl(defaultPage);
-      toast.success(`مرحباً ${user.name}! تم تسجيل الدخول بنجاح`);
-    } else {
-      // If demo auth fails, could try Supabase auth here
-      toast.error('بيانات تسجيل الدخول غير صحيحة. جرب الحسابات التجريبية المعروضة.');
-    }
+    // Authentication is now handled by the LoginPage component
+    // This function will be called after successful authentication
   };
 
   const handleLogout = (): void => {

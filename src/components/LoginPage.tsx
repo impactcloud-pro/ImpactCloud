@@ -8,6 +8,8 @@ import { Logo } from './Logo';
 import { Eye, EyeOff, Mail, Lock, LogIn, ArrowLeft, User, Users, Building } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
 import { toast } from 'sonner@2.0.3';
+import { useAuth } from '../hooks/useAuth';
+import { handleSupabaseError } from '../utils/supabaseHelpers';
 
 interface LoginPageProps {
   onLogin: (loginInput: string, password: string) => void;
@@ -20,6 +22,7 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,21 +34,29 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
 
     setIsLoading(true);
 
-    // Simulate loading delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
     try {
-      onLogin(loginInput, password);
+      // Try Supabase authentication
+      const result = await signIn(loginInput, password);
+      
+      if (result.user && result.profile) {
+        // Convert Supabase user to app user format
+        const appUser = {
+          email: result.user.email!,
+          name: result.profile.name,
+          role: result.profile.role_id,
+          organization: result.profile.organizations?.name
+        };
+        onLogin(loginInput, password); // This will be handled by the auth state
+        toast.success(`مرحباً ${appUser.name}! تم تسجيل الدخول بنجاح`);
+      } else {
+        toast.error('لم يتم العثور على ملف تعريف المستخدم');
+      }
     } catch (error) {
-      toast.error('حدث خطأ أثناء تسجيل الدخول');
+      const errorMessage = handleSupabaseError(error);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDemoLogin = (email: string, demoPassword: string) => {
-    // Demo login removed - use real authentication
-    toast.info('يرجى استخدام بيانات دخول حقيقية');
   };
 
   return (
