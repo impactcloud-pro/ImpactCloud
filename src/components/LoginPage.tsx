@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Logo } from './Logo';
 import { Eye, EyeOff, Mail, Lock, LogIn, ArrowLeft, User, Users, Building } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { setupDatabase, testLogin } from '../lib/supabase';
 
