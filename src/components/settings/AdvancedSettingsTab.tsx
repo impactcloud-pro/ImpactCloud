@@ -13,7 +13,7 @@ import {
   Activity, Database, Wifi, Settings as SettingsIcon, AlertCircle,
   RefreshCw, Download, Trash2, Eye, Shield, Zap, Wrench
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface AdvancedSettingsTabProps {
   advancedSettings: {

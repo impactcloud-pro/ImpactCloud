@@ -9,7 +9,7 @@ import { Badge } from '../ui/badge';
 import { Shield, Info, Lock, Eye } from 'lucide-react';
 import { Role } from '../../constants/settingsConstants';
 import { getPermissionsByCategory } from '../../utils/settingsUtils';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface PermissionsDialogProps {
   isOpen: boolean;
