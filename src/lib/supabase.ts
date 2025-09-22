@@ -24,7 +24,44 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
+      if (profileError) {
+        console.error('❌ Profile creation error:', profileError);
+        throw profileError;
+      }
+      
+      console.log('✅ User profile created successfully');
+    }
 
+    console.log('🎉 Database setup completed successfully!');
+    return true;
+  } catch (error) {
+    console.error('💥 Database setup failed:', error);
+    throw error;
+  }
+}
+
+// Test login function
+export async function testLogin() {
+  try {
+    console.log('🔐 Testing login...');
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: 'admin@test.com',
+      password: 'TestPass123!'
+    });
+
+    if (error) {
+      console.error('❌ Test login failed:', error);
+      throw error;
+    }
+
+    console.log('✅ Test login successful:', data);
+    return data;
+  } catch (error) {
+    console.error('💥 Test login error:', error);
+    throw error;
+  }
+}
 // Create test users function
 export async function createTestUsers() {
   try {
@@ -113,3 +150,52 @@ export async function testSupabaseConnection() {
 
 // Export the client
 export default supabase;
+
+// Setup database with test users
+export async function setupDatabase() {
+  try {
+    console.log('🚀 Starting database setup...');
+    
+    // Create test user
+    const testUser = {
+      email: 'admin@test.com',
+      password: 'TestPass123!',
+      userData: {
+        user_id: 'test_admin_001',
+        name: 'مدير النظام التجريبي',
+        role_id: 'admin',
+        status: 'Active'
+      }
+    };
+
+    console.log('📝 Creating test user...');
+    
+    // Try to sign up the user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: testUser.email,
+      password: testUser.password,
+      options: {
+        emailRedirectTo: undefined,
+        data: testUser.userData
+      }
+    });
+
+    if (authError && !authError.message.includes('already registered')) {
+      console.error('❌ Auth signup error:', authError);
+      throw authError;
+    }
+
+    console.log('✅ Auth user created or already exists');
+
+    // If user was created or already exists, ensure profile exists
+    if (authData.user) {
+      const { error: profileError } = await supabase
+        .from('users')
+        .upsert({
+          user_id: authData.user.id,
+          email: testUser.email,
+          name: testUser.userData.name,
+          role_id: testUser.userData.role_id,
+          status: testUser.userData.status,
+          created_at: new Date().toISOString()
+        });

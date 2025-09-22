@@ -9,6 +9,7 @@ import { Eye, EyeOff, Mail, Lock, LogIn, ArrowLeft, User, Users, Building } from
 import { LanguageToggle } from './LanguageToggle';
 import { toast } from 'sonner@2.0.3';
 import { useAuth } from '../hooks/useAuth';
+import { setupDatabase, testLogin } from '../lib/supabase';
 
 interface LoginPageProps {
   onLogin: (loginInput: string, password: string) => void;
@@ -21,6 +22,8 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { signIn, loading, error } = useAuth();
+  const [isSettingUp, setIsSettingUp] = useState(false);
+  const [isTestingLogin, setIsTestingLogin] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,16 +52,30 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
     }
   };
 
-  // Show test user credentials for development
-  const testUsers = [
-    { email: 'superadmin@system.com', password: 'SuperAdmin123!', role: 'مدير النظام' },
-    { email: 'admin@atharonaa.com', password: 'Admin123!', role: 'مدير أثرنا' },
-    { email: 'manager@organization.com', password: 'Manager123!', role: 'مدير منظمة' }
-  ];
+  const handleSetupDatabase = async () => {
+    setIsSettingUp(true);
+    try {
+      await setupDatabase();
+      toast.success('تم إنشاء المستخدمين التجريبيين بنجاح! يمكنك الآن تسجيل الدخول');
+    } catch (error) {
+      console.error('Setup failed:', error);
+      toast.error('فشل في إنشاء المستخدمين التجريبيين');
+    } finally {
+      setIsSettingUp(false);
+    }
+  };
 
-  const handleTestLogin = (testEmail: string, testPassword: string) => {
-    setEmail(testEmail);
-    setPassword(testPassword);
+  const handleTestLogin = async () => {
+    setIsTestingLogin(true);
+    try {
+      await testLogin();
+      toast.success('تم اختبار تسجيل الدخول بنجاح!');
+    } catch (error) {
+      console.error('Test login failed:', error);
+      toast.error('فشل في اختبار تسجيل الدخول');
+    } finally {
+      setIsTestingLogin(false);
+    }
   };
 
   return (
@@ -94,6 +111,34 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {/* Development Setup Buttons */}
+            <div className="space-y-3 p-4 bg-white/5 rounded-lg border border-white/20">
+              <p className="text-white text-sm text-center">أدوات التطوير:</p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={handleSetupDatabase}
+                  disabled={isSettingUp}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                  size="sm"
+                >
+                  {isSettingUp ? 'جاري الإنشاء...' : 'إنشاء المستخدمين التجريبيين'}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleTestLogin}
+                  disabled={isTestingLogin}
+                  className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                  size="sm"
+                >
+                  {isTestingLogin ? 'جاري الاختبار...' : 'اختبار تسجيل الدخول'}
+                </Button>
+              </div>
+              <p className="text-white/70 text-xs text-center">
+                بعد إنشاء المستخدمين، استخدم: admin@test.com / TestPass123!
+              </p>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">البريد الإلكتروني</Label>
@@ -171,7 +216,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
               </Button>
             </form>
 
-            {/* Test Users Section for Development */}
           </CardContent>
         </Card>
       </div>
