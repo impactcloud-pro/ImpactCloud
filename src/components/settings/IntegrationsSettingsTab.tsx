@@ -12,7 +12,7 @@ import {
   Brain, Zap, Webhook, Code, Eye, EyeOff, AlertCircle, Settings as SettingsIcon,
   CheckCircle, XCircle, RefreshCw, TestTube, Plus, Edit, Trash2
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { llmProviders, type Integration } from '../../constants/settingsConstants';
 
 interface IntegrationsSettingsTabProps {

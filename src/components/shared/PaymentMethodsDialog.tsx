@@ -12,7 +12,7 @@ import {
   Plus, Edit, Trash2, Save, RefreshCw, CreditCard, DollarSign, 
   Smartphone, Building, X
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { availablePaymentMethods, type PaymentMethod } from '../../constants/settingsConstants';
 
 interface PaymentMethodFormData {
