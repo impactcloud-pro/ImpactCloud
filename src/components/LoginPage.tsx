@@ -196,7 +196,7 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
             <div className="mt-6 pt-6 border-t border-white/20">
               <div className="text-center space-y-4">
                 <p className="text-sm text-blue-200">
-                  للاختبار: إنشاء المستخدمين التجريبيين
+                  إنشاء المستخدمين التجريبيين للاختبار
                 </p>
                 <Button
                   onClick={handleCreateTestUsers}
@@ -214,14 +214,26 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
                   )}
                 </Button>
                 
-                {/* Test Credentials */}
-                <div className="bg-white/5 rounded-lg p-4 text-xs text-blue-200">
-                  <p className="font-semibold mb-2">بيانات الاختبار:</p>
-                  <div className="space-y-1 text-left" dir="ltr">
-                    <p>admin@test.com / password123 (Super Admin)</p>
-                    <p>manager@test.com / password123 (Org Manager)</p>
-                    <p>user@test.com / password123 (Admin)</p>
+                {/* Test Credentials Info */}
+                <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4 text-blue-200 text-sm">
+                  <p className="font-semibold mb-3">بيانات تسجيل الدخول للاختبار:</p>
+                  <div className="space-y-2">
+                    <div className="bg-white/10 rounded p-2">
+                      <p className="font-medium">مدير النظام:</p>
+                      <p className="text-xs" dir="ltr">admin@test.com / password123</p>
+                    </div>
+                    <div className="bg-white/10 rounded p-2">
+                      <p className="font-medium">مدير المنظمة:</p>
+                      <p className="text-xs" dir="ltr">manager@test.com / password123</p>
+                    </div>
+                    <div className="bg-white/10 rounded p-2">
+                      <p className="font-medium">مدير أثرنا:</p>
+                      <p className="text-xs" dir="ltr">user@test.com / password123</p>
+                    </div>
                   </div>
+                  <p className="text-xs mt-3 text-blue-300">
+                    انقر على "إنشاء المستخدمين" أولاً، ثم استخدم هذه البيانات للدخول
+                  </p>
                 </div>
               </div>
             </div>
