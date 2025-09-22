@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Logo } from './Logo';
+import { useAuth } from '../hooks/useAuth';
 import { 
   BarChart3,
   Users,
@@ -22,6 +23,7 @@ import {
 import type { UserRole } from '../App';
 import { getPageTitle } from './PageTitles';
 import { AIChatWidget } from './AIChatWidget';
+import { toast } from 'sonner@2.0.3';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -50,6 +52,7 @@ export function Layout({
   onGoToLanding
 }: LayoutProps) {
   const [expandedMenus, setExpandedMenus] = React.useState<string[]>([]);
+  const { signOut } = useAuth();
 
   const toggleMenu = (menuId: string) => {
     setExpandedMenus(prev => 
@@ -79,6 +82,16 @@ export function Layout({
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      onLogout();
+      toast.success('تم تسجيل الخروج بنجاح');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('حدث خطأ أثناء تسجيل الخروج');
+    }
+  };
   const getMenuItems = () => {
     const baseItems: MenuItem[] = [];
     
@@ -290,7 +303,7 @@ export function Layout({
               <Button
                 variant="ghost"
                 className="w-full justify-start text-right gap-4 h-12 text-blue-100 hover:text-white hover:bg-red-500/20 hover:shadow-md rounded-xl transition-all duration-200"
-                onClick={onLogout}
+                onClick={handleLogout}
               >
                 <LogOut className="h-5 w-5" />
                 تسجيل الخروج

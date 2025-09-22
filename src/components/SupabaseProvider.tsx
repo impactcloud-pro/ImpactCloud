@@ -2,16 +2,12 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { logActivity } from '../services/database';
-import { toast } from 'sonner@2.0.3';
 
 interface SupabaseContextType {
   user: User | null;
   loading: boolean;
   userProfile: any | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: any) => Promise<void>;
-  signOut: () => Promise<void>;
-  isConnected: boolean;
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
@@ -115,113 +111,10 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      if (!isConnected) {
-        throw new Error('قاعدة البيانات غير متصلة');
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      // Update last login
-      if (data.user) {
-        await supabase
-          .from('users')
-          .update({ last_login: new Date().toISOString() })
-          .eq('user_id', data.user.id);
-      }
-
-      toast.success('تم تسجيل الدخول بنجاح');
-    } catch (error: any) {
-      const errorMessage = handleSupabaseError(error);
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
-  const signUp = async (email: string, password: string, userData: any) => {
-    try {
-      if (!isConnected) {
-        throw new Error('قاعدة البيانات غير متصلة');
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userData
-        }
-      });
-
-      if (error) throw error;
-
-      // Create user profile
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            user_id: data.user.id,
-            name: userData.name,
-            email: userData.email,
-            role_id: userData.role_id || 'beneficiary',
-            organization_id: userData.organization_id,
-            phone_number: userData.phone_number,
-            status: 'active'
-          });
-
-        if (profileError) throw profileError;
-      }
-
-      toast.success('تم إنشاء الحساب بنجاح');
-    } catch (error: any) {
-      const errorMessage = handleSupabaseError(error);
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      // Log sign out activity before signing out
-      if (user) {
-        try {
-          await logActivity({
-            log_id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            user_id: user.id,
-            action: 'تسجيل خروج',
-            details: 'تم تسجيل الخروج',
-            ip_address: null,
-            user_agent: navigator.userAgent
-          });
-        } catch (error) {
-          console.error('Failed to log sign out activity:', error);
-        }
-      }
-
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      setUserProfile(null);
-      toast.success('تم تسجيل الخروج بنجاح');
-    } catch (error: any) {
-      const errorMessage = handleSupabaseError(error);
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
   const value = {
     user,
     loading,
     userProfile,
-    signIn,
-    signUp,
-    signOut,
     isConnected
   };
 
@@ -230,31 +123,4 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
       {children}
     </SupabaseContext.Provider>
   );
-}
-
-// Helper function for error handling
-function handleSupabaseError(error: any): string {
-  if (!error) return '';
-  
-  const errorMappings: Record<string, string> = {
-    'Invalid login credentials': 'بيانات تسجيل الدخول غير صحيحة',
-    'Email not confirmed': 'يرجى تأكيد البريد الإلكتروني',
-    'User already registered': 'المستخدم مسجل مسبقاً',
-    'Password should be at least 6 characters': 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
-    'Unable to validate email address': 'عنوان البريد الإلكتروني غير صالح',
-    'signup_disabled': 'التسجيل معطل حالياً',
-    'Database connection failed': 'فشل الاتصال بقاعدة البيانات',
-    'Permission denied': 'ليس لديك صلاحية للقيام بهذا الإجراء',
-    'Row level security': 'ليس لديك صلاحية للوصول لهذه البيانات'
-  };
-
-  const errorMessage = error.message || '';
-  
-  for (const [key, value] of Object.entries(errorMappings)) {
-    if (errorMessage.includes(key)) {
-      return value;
-    }
-  }
-  
-  return error.message || 'حدث خطأ غير متوقع';
 }

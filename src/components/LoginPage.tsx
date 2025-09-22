@@ -9,7 +9,6 @@ import { Eye, EyeOff, Mail, Lock, LogIn, ArrowLeft, User, Users, Building } from
 import { LanguageToggle } from './LanguageToggle';
 import { toast } from 'sonner@2.0.3';
 import { useAuth } from '../hooks/useAuth';
-import { handleSupabaseError } from '../utils/supabaseHelpers';
 
 interface LoginPageProps {
   onLogin: (loginInput: string, password: string) => void;
@@ -18,45 +17,48 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageProps) {
-  const [loginInput, setLoginInput] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, loading, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!loginInput || !password) {
+    if (!email || !password) {
       toast.error('يرجى إدخال بيانات تسجيل الدخول وكلمة المرور');
       return;
     }
 
-    setIsLoading(true);
+    // Validate email format
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      toast.error('يرجى إدخال بريد إلكتروني صحيح');
+      return;
+    }
 
     try {
-      // Try Supabase authentication
-      const result = await signIn(loginInput, password);
+      const result = await signIn(email, password);
       
-      if (result.user && result.profile) {
-        // Convert Supabase user to app user format
-        const appUser = {
-          email: result.user.email!,
-          name: result.profile.name,
-          role: result.profile.role_id,
-          organization: result.profile.organizations?.name
-        };
-        onLogin(loginInput, password); // This will be handled by the auth state
-        toast.success(`مرحباً ${appUser.name}! تم تسجيل الدخول بنجاح`);
-      } else {
-        toast.error('لم يتم العثور على ملف تعريف المستخدم');
+      if (result.user) {
+        toast.success('تم تسجيل الدخول بنجاح!');
+        // The auth state change will handle navigation
       }
     } catch (error) {
-      const errorMessage = handleSupabaseError(error);
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+      // Error is already handled in useAuth hook
+      console.error('Login failed:', error);
     }
+  };
+
+  // Show test user credentials for development
+  const testUsers = [
+    { email: 'superadmin@system.com', password: 'SuperAdmin123!', role: 'مدير النظام' },
+    { email: 'admin@atharonaa.com', password: 'Admin123!', role: 'مدير أثرنا' },
+    { email: 'manager@organization.com', password: 'Manager123!', role: 'مدير منظمة' }
+  ];
+
+  const handleTestLogin = (testEmail: string, testPassword: string) => {
+    setEmail(testEmail);
+    setPassword(testPassword);
   };
 
   return (
@@ -94,18 +96,18 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="loginInput" className="text-white">اسم المستخدم</Label>
+                <Label htmlFor="email" className="text-white">البريد الإلكتروني</Label>
                 <div className="relative">
                   <Input
-                    id="loginInput"
-                    type="text"
-                    value={loginInput}
-                    onChange={(e) => setLoginInput(e.target.value)}
-                    placeholder="أدخل اسم المستخدم"
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="أدخل البريد الإلكتروني"
                     className="bg-white/10 border-white/30 text-white placeholder-white/60 focus:border-white/50 pl-10"
                     required
                   />
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
                 </div>
               </div>
 
@@ -143,12 +145,19 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
                 </button>
               </div>
 
+              {/* Error Display */}
+              {error && (
+                <div className="bg-red-500/20 border border-red-400/50 rounded-lg p-3 text-red-200 text-sm">
+                  {error}
+                </div>
+              )}
+
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="w-full bg-white text-[#18325A] hover:bg-gray-100 h-11 font-semibold"
               >
-                {isLoading ? (
+                {loading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-[#18325A] border-t-transparent rounded-full animate-spin"></div>
                     جاري تسجيل الدخول...
@@ -161,6 +170,29 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
                 )}
               </Button>
             </form>
+
+            {/* Test Users Section for Development */}
+            <div className="mt-6 pt-4 border-t border-white/20">
+              <p className="text-white/70 text-sm mb-3 text-center">حسابات تجريبية للاختبار:</p>
+              <div className="space-y-2">
+                {testUsers.map((testUser, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTestLogin(testUser.email, testUser.password)}
+                    className="w-full text-xs bg-white/5 border-white/20 text-white hover:bg-white/10 justify-start"
+                    disabled={loading}
+                  >
+                    <User className="h-3 w-3 ml-2" />
+                    {testUser.role} - {testUser.email}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-white/50 text-xs mt-2 text-center">
+                انقر على أي حساب لملء البيانات تلقائياً
+              </p>
+            </div>
 
           </CardContent>
         </Card>
