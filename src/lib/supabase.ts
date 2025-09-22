@@ -33,218 +33,118 @@ export const supabaseAdmin = supabaseServiceKey ? createClient(supabaseUrl, supa
   }
 }) : null;
 
-// Create test users function with proper error handling
-export async function createTestUsers(): Promise<boolean> {
+// Create test users function
+export async function createTestUsers() {
   try {
-    console.log('Starting test user creation...');
-    
-    // First, ensure we have the required roles and organization
-    await ensureInitialData();
-    
     const testUsers = [
       {
-        email: 'admin@test.com',
+        email: 'admin@test.com', 
         password: 'password123',
         name: 'مدير النظام الرئيسي',
-        role_id: 'super_admin',
-        organization_id: null
+        role_id: 'super_admin'
       },
       {
         email: 'manager@test.com',
-        password: 'password123',
+        password: 'password123', 
         name: 'مدير المنظمة',
-        role_id: 'org_manager',
-        organization_id: 'test_org_001'
+        role_id: 'org_manager'
       },
       {
         email: 'user@test.com',
         password: 'password123',
-        name: 'مدير أثرنا',
-        role_id: 'admin',
-        organization_id: null
+        name: 'مدير أثرنا', 
+        role_id: 'admin'
       }
     ];
 
-    let successCount = 0;
+    console.log('Creating test users...');
     
     for (const user of testUsers) {
       try {
-        console.log(`Creating user: ${user.email}`);
-        
-        // Check if user already exists
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select('user_id')
-          .eq('email', user.email)
-          .single();
-          
-        if (existingUser) {
-          console.log(`User ${user.email} already exists in database`);
-          successCount++;
-          continue;
-        }
-        
-        // Create user with admin client if available
+        // Try to create user with admin client first (if service key available)
         if (supabaseAdmin) {
-          const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          console.log(`Creating user with admin client: ${user.email}`);
+          
+          const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.createUser({
             email: user.email,
             password: user.password,
-            email_confirm: true
+            email_confirm: true,
+            user_metadata: {
+              name: user.name,
+              role_id: user.role_id
+            }
           });
 
-          if (authError) {
-            if (authError.message?.includes('already registered')) {
-              console.log(`Auth user ${user.email} already exists`);
-              // Try to get the existing user ID
-              const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-              if (!listError) {
-                const existingAuthUser = users.find(u => u.email === user.email);
-                if (existingAuthUser) {
-                  // Create profile for existing auth user
-                  await createUserProfile(existingAuthUser.id, user);
-                  successCount++;
-                }
-              }
+          if (adminError) {
+            if (adminError.message?.includes('already registered')) {
+              console.log(`User ${user.email} already exists`);
               continue;
             }
-            throw authError;
+            throw adminError;
           }
 
-          if (authData.user) {
-            await createUserProfile(authData.user.id, user);
-            successCount++;
-            console.log(`✓ Created user with admin client: ${user.email}`);
+          // Create user profile in database
+          if (adminData.user) {
+            console.log(`Creating profile for user: ${user.email}`);
+            
+            const { error: profileError } = await supabase
+              .from('users')
+              .insert({
+                user_id: adminData.user.id,
+                name: user.name,
+                email: user.email,
+                role_id: user.role_id,
+                status: 'Active'
+              });
+
+            if (profileError) {
+              if (!profileError.message?.includes('duplicate key')) {
+                console.error(`Profile creation error for ${user.email}:`, profileError);
+              }
+            } else {
+              console.log(`✓ Test user created successfully: ${user.email}`);
+            }
           }
         } else {
-          // Fallback to regular signup
-          const { data: authData, error: authError } = await supabase.auth.signUp({
+          console.log(`Creating user with regular signup: ${user.email}`);
+          
+          const { data: signupData, error: signupError } = await supabase.auth.signUp({
             email: user.email,
             password: user.password,
             options: {
               data: {
                 name: user.name,
-                role_id: user.role_id,
-                organization_id: user.organization_id
+                role_id: user.role_id
               }
             }
           });
 
-          if (authError) {
-            if (authError.message?.includes('already registered')) {
-              console.log(`Auth user ${user.email} already exists via signup`);
-              successCount++;
+          if (signupError) {
+            if (signupError.message?.includes('already registered')) {
+              console.log(`User ${user.email} already exists`);
               continue;
             }
-            throw authError;
+            throw signupError;
           }
           
-          if (authData.user) {
-            await createUserProfile(authData.user.id, user);
-            successCount++;
-            console.log(`✓ Created user with signup: ${user.email}`);
+          if (signupData.user) {
+            console.log(`✓ Test user signed up: ${user.email}`);
           }
         }
       } catch (error) {
         console.error(`Failed to create user ${user.email}:`, error);
+        // Continue with next user instead of stopping
       }
     }
 
-    console.log(`Test user creation completed. Created/verified ${successCount} users.`);
-    return successCount > 0;
+    console.log('Test user creation completed');
+    return true;
   } catch (error) {
     console.error('Error creating test users:', error);
     return false;
   }
 }
 
-// Helper function to create user profile
-async function createUserProfile(userId: string, userData: any) {
-  try {
-    const { error } = await supabase
-      .from('users')
-      .insert({
-        user_id: userId,
-        name: userData.name,
-        email: userData.email,
-        role_id: userData.role_id,
-        organization_id: userData.organization_id,
-        status: 'Active',
-        created_at: new Date().toISOString()
-      });
-
-    if (error && !error.message?.includes('duplicate key')) {
-      throw error;
-    }
-  } catch (error) {
-    console.error('Error creating user profile:', error);
-    throw error;
-  }
-}
-
-// Helper function to ensure initial data exists
-async function ensureInitialData() {
-  try {
-    // Check if roles exist
-    const { data: roles, error: rolesError } = await supabase
-      .from('roles')
-      .select('role_id')
-      .limit(1);
-
-    if (rolesError || !roles || roles.length === 0) {
-      console.log('Creating initial roles...');
-      
-      const initialRoles = [
-        { role_id: 'super_admin', name: 'Super Admin', description: 'System Administrator' },
-        { role_id: 'admin', name: 'Admin', description: 'Platform Administrator' },
-        { role_id: 'org_manager', name: 'Organization Manager', description: 'Organization Manager' },
-        { role_id: 'beneficiary', name: 'Beneficiary', description: 'Beneficiary User' }
-      ];
-
-      const { error: insertRolesError } = await supabase
-        .from('roles')
-        .insert(initialRoles);
-
-      if (insertRolesError && !insertRolesError.message?.includes('duplicate key')) {
-        console.error('Error creating roles:', insertRolesError);
-      }
-    }
-
-    // Check if test organization exists
-    const { data: orgs, error: orgsError } = await supabase
-      .from('organizations')
-      .select('organization_id')
-      .eq('organization_id', 'test_org_001')
-      .single();
-
-    if (orgsError || !orgs) {
-      console.log('Creating test organization...');
-      
-      const { error: insertOrgError } = await supabase
-        .from('organizations')
-        .insert({
-          organization_id: 'test_org_001',
-          name: 'منظمة تجريبية للاختبار',
-          type: 'nonprofit',
-          status: 'active',
-          organization_manager: 'مدير المنظمة',
-          username: 'test_org',
-          password: 'test123',
-          number_of_beneficiaries: 0,
-          number_of_surveys: 0,
-          quota: 1000,
-          consumed: 0,
-          remaining: 1000,
-          created_at: new Date().toISOString()
-        });
-
-      if (insertOrgError && !insertOrgError.message?.includes('duplicate key')) {
-        console.error('Error creating test organization:', insertOrgError);
-      }
-    }
-  } catch (error) {
-    console.error('Error ensuring initial data:', error);
-  }
-}
 // Test connection function
 export async function testSupabaseConnection() {
   try {

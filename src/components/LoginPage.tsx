@@ -7,8 +7,9 @@ import { Badge } from './ui/badge';
 import { Logo } from './Logo';
 import { Eye, EyeOff, Mail, Lock, LogIn, ArrowLeft, User, Users, Building } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { useAuth } from '../hooks/useAuth';
+import { createTestUsers } from '../lib/supabase';
 
 interface LoginPageProps {
   onLogin: (loginInput: string, password: string) => void;
@@ -80,20 +81,27 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#18325A] via-[#2A4A7A] to-[#1E3A5F] flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Logo and Header */}
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <button onClick={onLogoClick} className="transition-transform hover:scale-105">
-              <Logo className="h-16 w-auto" />
-            </button>
+    <div className="min-h-screen bg-[#18325A] flex items-center justify-center p-4" dir="rtl">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-32 h-32 bg-white/5 rounded-full blur-xl"></div>
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-blue-300/10 rounded-full blur-2xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="w-full max-w-md mx-auto relative z-10">
+        {/* Header Section */}
+        <div className="text-center mb-8 space-y-6">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Logo 
+              onClick={onLogoClick}
+              size="xl"
+              showText={true}
+              variant="light"
+              className="cursor-pointer transform hover:scale-105 transition-transform duration-200"
+            />
           </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-white">مرحباً بك</h1>
-            <p className="text-blue-200">سجل دخولك للوصول إلى حسابك</p>
-          </div>
-          <LanguageToggle />
         </div>
 
         {/* Login Form */}
@@ -175,6 +183,39 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
 
               <Button
                 type="submit"
+          {/* Setup Section for Development */}
+          <div className="mt-6 pt-6 border-t border-white/20">
+            <div className="text-center space-y-4">
+              <p className="text-sm text-blue-200">
+                للاختبار: إنشاء المستخدمين التجريبيين
+              </p>
+              <Button
+                onClick={handleCreateTestUsers}
+                disabled={isCreatingUsers}
+                variant="outline"
+                className="w-full border-white/30 text-white hover:bg-white/10"
+              >
+                {isCreatingUsers ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    جاري إنشاء المستخدمين...
+                  </div>
+                ) : (
+                  'إنشاء المستخدمين التجريبيين'
+                )}
+              </Button>
+              
+              {/* Test Credentials */}
+              <div className="bg-white/5 rounded-lg p-4 text-xs text-blue-200">
+                <p className="font-semibold mb-2">بيانات الاختبار:</p>
+                <div className="space-y-1 text-left" dir="ltr">
+                  <p>admin@test.com / password123 (Super Admin)</p>
+                  <p>manager@test.com / password123 (Org Manager)</p>
+                  <p>user@test.com / password123 (Admin)</p>
+                </div>
+              </div>
+            </div>
+          </div>
                 disabled={loading}
                 className="w-full bg-white text-[#18325A] hover:bg-gray-100 h-11 font-semibold"
               >
@@ -191,52 +232,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
                 )}
               </Button>
             </form>
-
-            {/* Setup Section for Development */}
-            <div className="mt-6 pt-6 border-t border-white/20">
-              <div className="text-center space-y-4">
-                <p className="text-sm text-blue-200">
-                  إنشاء المستخدمين التجريبيين للاختبار
-                </p>
-                <Button
-                  onClick={handleCreateTestUsers}
-                  disabled={isCreatingUsers}
-                  variant="outline"
-                  className="w-full border-white/30 text-white hover:bg-white/10"
-                >
-                  {isCreatingUsers ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      جاري إنشاء المستخدمين...
-                    </div>
-                  ) : (
-                    'إنشاء المستخدمين التجريبيين'
-                  )}
-                </Button>
-                
-                {/* Test Credentials Info */}
-                <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4 text-blue-200 text-sm">
-                  <p className="font-semibold mb-3">بيانات تسجيل الدخول للاختبار:</p>
-                  <div className="space-y-2">
-                    <div className="bg-white/10 rounded p-2">
-                      <p className="font-medium">مدير النظام:</p>
-                      <p className="text-xs" dir="ltr">admin@test.com / password123</p>
-                    </div>
-                    <div className="bg-white/10 rounded p-2">
-                      <p className="font-medium">مدير المنظمة:</p>
-                      <p className="text-xs" dir="ltr">manager@test.com / password123</p>
-                    </div>
-                    <div className="bg-white/10 rounded p-2">
-                      <p className="font-medium">مدير أثرنا:</p>
-                      <p className="text-xs" dir="ltr">user@test.com / password123</p>
-                    </div>
-                  </div>
-                  <p className="text-xs mt-3 text-blue-300">
-                    انقر على "إنشاء المستخدمين" أولاً، ثم استخدم هذه البيانات للدخول
-                  </p>
-                </div>
-              </div>
-            </div>
 
           </CardContent>
         </Card>
