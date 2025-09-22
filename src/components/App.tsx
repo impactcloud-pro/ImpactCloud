@@ -11,7 +11,7 @@ import { ForgotPasswordModal } from './components/ForgotPasswordModal';
 import { LanguageToggle } from './components/LanguageToggle';
 import { FaviconUpdater } from './components/FaviconUpdater';
 import { Toaster } from './components/ui/sonner';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 import { testSupabaseConnection } from './lib/supabase';
 
