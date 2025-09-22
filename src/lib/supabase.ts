@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://opzxyqfxsqtgfzcnkkoj.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wenh5cWZ4c3F0Z2Z6Y25ra29qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NTc0OTMsImV4cCI6MjA3NDAzMzQ5M30.4pFvpIshRQqg5pYtKsPlL6TVw3j3-jpXqovilX0T_nk';
+const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
@@ -24,10 +25,23 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
+// Admin client for user management (only if service key is available)
+export const supabaseAdmin = supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+}) : null;
 
 // Create test users function
 export async function createTestUsers() {
   try {
+    // If no admin client, skip test user creation
+    if (!supabaseAdmin) {
+      console.log('Service role key not available, skipping test user creation');
+      return false;
+    }
+
     const testUsers = [
       {
         email: 'superadmin@system.com',
@@ -66,14 +80,12 @@ export async function createTestUsers() {
     
     for (const user of testUsers) {
       try {
-        // Try to sign up the user
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        // Use admin client to create confirmed users
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
           email: user.email,
           password: user.password,
-          options: {
-            emailRedirectTo: undefined,
-            data: user.userData
-          }
+          email_confirm: true, // Auto-confirm email
+          user_metadata: user.userData
         });
 
         if (authError && !authError.message.includes('already registered')) {
