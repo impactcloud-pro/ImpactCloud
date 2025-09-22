@@ -9,7 +9,6 @@ import { Eye, EyeOff, Mail, Lock, LogIn, ArrowLeft, User, Users, Building } from
 import { LanguageToggle } from './LanguageToggle';
 import { toast } from 'sonner@2.0.3';
 import { useAuth } from '../hooks/useAuth';
-import { createTestUsers } from '../lib/supabase';
 
 interface LoginPageProps {
   onLogin: (loginInput: string, password: string) => void;
@@ -21,7 +20,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isCreatingUsers, setIsCreatingUsers] = useState(false);
   const { signIn, loading, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,28 +49,11 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
     }
   };
 
-  const handleCreateTestUsers = async () => {
-    setIsCreatingUsers(true);
-    try {
-      const success = await createTestUsers();
-      if (success) {
-        toast.success('تم إنشاء المستخدمين التجريبيين بنجاح! يمكنك الآن تسجيل الدخول');
-      } else {
-        toast.error('فشل في إنشاء المستخدمين التجريبيين');
-      }
-    } catch (error) {
-      console.error('Error creating test users:', error);
-      toast.error('حدث خطأ أثناء إنشاء المستخدمين التجريبيين');
-    } finally {
-      setIsCreatingUsers(false);
-    }
-  };
-
   // Show test user credentials for development
   const testUsers = [
-    { email: 'admin@test.com', password: 'password123', role: 'مدير النظام' },
-    { email: 'manager@test.com', password: 'password123', role: 'مدير منظمة' },
-    { email: 'user@test.com', password: 'password123', role: 'مدير أثرنا' }
+    { email: 'superadmin@system.com', password: 'SuperAdmin123!', role: 'مدير النظام' },
+    { email: 'admin@atharonaa.com', password: 'Admin123!', role: 'مدير أثرنا' },
+    { email: 'manager@organization.com', password: 'Manager123!', role: 'مدير منظمة' }
   ];
 
   const handleTestLogin = (testEmail: string, testPassword: string) => {
@@ -113,16 +94,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Test Users Info */}
-            <div className="bg-yellow-500/20 border border-yellow-400/50 rounded-lg p-3 text-yellow-200 text-sm">
-              <p className="font-semibold mb-2">⚠️ إذا لم تعمل بيانات الاختبار:</p>
-              <div className="space-y-1 text-xs">
-                <p>1. تحقق من إعدادات Supabase Auth</p>
-                <p>2. تأكد من تعطيل Email Confirmation</p>
-                <p>3. أو استخدم VITE_SUPABASE_SERVICE_ROLE_KEY</p>
-              </div>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-white">البريد الإلكتروني</Label>
@@ -183,39 +154,6 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
 
               <Button
                 type="submit"
-          {/* Setup Section for Development */}
-          <div className="mt-6 pt-6 border-t border-white/20">
-            <div className="text-center space-y-4">
-              <p className="text-sm text-blue-200">
-                للاختبار: إنشاء المستخدمين التجريبيين
-              </p>
-              <Button
-                onClick={handleCreateTestUsers}
-                disabled={isCreatingUsers}
-                variant="outline"
-                className="w-full border-white/30 text-white hover:bg-white/10"
-              >
-                {isCreatingUsers ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    جاري إنشاء المستخدمين...
-                  </div>
-                ) : (
-                  'إنشاء المستخدمين التجريبيين'
-                )}
-              </Button>
-              
-              {/* Test Credentials */}
-              <div className="bg-white/5 rounded-lg p-4 text-xs text-blue-200">
-                <p className="font-semibold mb-2">بيانات الاختبار:</p>
-                <div className="space-y-1 text-left" dir="ltr">
-                  <p>admin@test.com / password123 (Super Admin)</p>
-                  <p>manager@test.com / password123 (Org Manager)</p>
-                  <p>user@test.com / password123 (Admin)</p>
-                </div>
-              </div>
-            </div>
-          </div>
                 disabled={loading}
                 className="w-full bg-white text-[#18325A] hover:bg-gray-100 h-11 font-semibold"
               >
@@ -233,39 +171,28 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
               </Button>
             </form>
 
-          {/* Setup Section for Development */}
-          <div className="mt-6 pt-6 border-t border-white/20">
-            <div className="text-center space-y-4">
-              <p className="text-sm text-blue-200">
-                للاختبار: إنشاء المستخدمين التجريبيين
-              </p>
-              <Button
-                onClick={handleCreateTestUsers}
-                disabled={isCreatingUsers}
-                variant="outline"
-                className="w-full border-white/30 text-white hover:bg-white/10"
-              >
-                {isCreatingUsers ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    جاري إنشاء المستخدمين...
-                  </div>
-                ) : (
-                  'إنشاء المستخدمين التجريبيين'
-                )}
-              </Button>
-              
-              {/* Test Credentials */}
-              <div className="bg-white/5 rounded-lg p-4 text-xs text-blue-200">
-                <p className="font-semibold mb-2">بيانات الاختبار:</p>
-                <div className="space-y-1 text-left" dir="ltr">
-                  <p>admin@test.com / password123 (Super Admin)</p>
-                  <p>manager@test.com / password123 (Org Manager)</p>
-                  <p>user@test.com / password123 (Admin)</p>
-                </div>
+            {/* Test Users Section for Development */}
+            <div className="mt-6 pt-4 border-t border-white/20">
+              <p className="text-white/70 text-sm mb-3 text-center">حسابات تجريبية للاختبار:</p>
+              <div className="space-y-2">
+                {testUsers.map((testUser, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTestLogin(testUser.email, testUser.password)}
+                    className="w-full text-xs bg-white/5 border-white/20 text-white hover:bg-white/10 justify-start"
+                    disabled={loading}
+                  >
+                    <User className="h-3 w-3 ml-2" />
+                    {testUser.role} - {testUser.email}
+                  </Button>
+                ))}
               </div>
+              <p className="text-white/50 text-xs mt-2 text-center">
+                انقر على أي حساب لملء البيانات تلقائياً
+              </p>
             </div>
-          </div>
 
           </CardContent>
         </Card>
