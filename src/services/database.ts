@@ -1,8 +1,126 @@
 import { supabase } from '../lib/supabase';
+import type { Database } from '../lib/supabase';
 
-// Database service functions
+// Type aliases for easier use
+type Tables = Database['public']['Tables'];
+type User = Tables['users']['Row'];
+type Organization = Tables['organizations']['Row'];
+type Survey = Tables['surveys']['Row'];
+type Beneficiary = Tables['beneficiaries']['Row'];
+type Response = Tables['responses']['Row'];
+type ActivityLog = Tables['activity_log']['Row'];
+type Transaction = Tables['transactions']['Row'];
+type Request = Tables['requests']['Row'];
+type Role = Tables['roles']['Row'];
+type SubscriptionPlan = Tables['subscription_plans']['Row'];
 
-// User management functions
+// Enhanced authentication functions with better error handling
+export async function signInWithEmail(email: string, password: string) {
+  try {
+    // First try to find user in our users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select(`
+        *,
+        roles(name, description),
+        organizations(name, type)
+      `)
+      .eq('email', email)
+      .single();
+
+    if (userError) {
+      console.log('User not found in database, attempting auth sign in');
+    }
+
+    // Attempt Supabase auth sign in
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    if (error) throw error;
+    
+    // Update last login if user exists in our users table
+    if (userData && data.user) {
+      await supabase
+        .from('users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('user_id', data.user.id);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Sign in error:', error);
+    throw error;
+  }
+}
+
+export async function signUpWithEmail(email: string, password: string, userData: {
+  name: string;
+  role_id: string;
+  organization_id?: string;
+  phone_number?: string;
+}) {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData
+      }
+    });
+    
+    if (error) throw error;
+    
+    // Create user profile in our users table
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          user_id: data.user.id,
+          name: userData.name,
+          email: email,
+          role_id: userData.role_id,
+          organization_id: userData.organization_id,
+          phone_number: userData.phone_number,
+          status: 'active'
+        });
+
+      if (profileError) {
+        console.error('Error creating user profile:', profileError);
+        throw profileError;
+      }
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Sign up error:', error);
+    throw error;
+  }
+}
+
+export async function signOut() {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  } catch (error) {
+    console.error('Sign out error:', error);
+    throw error;
+  }
+}
+
+export async function getCurrentUser() {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return user;
+  } catch (error) {
+    console.error('Get current user error:', error);
+    throw error;
+  }
+}
+
+// Enhanced user management functions
 export async function getUsers() {
   try {
     const { data, error } = await supabase
@@ -22,7 +140,7 @@ export async function getUsers() {
   }
 }
 
-export async function createUser(userData: any) {
+export async function createUser(userData: Tables['users']['Insert']) {
   try {
     const { data, error } = await supabase
       .from('users')
@@ -49,7 +167,7 @@ export async function createUser(userData: any) {
   }
 }
 
-export async function updateUser(userId: string, updates: any) {
+export async function updateUser(userId: string, updates: Tables['users']['Update']) {
   try {
     const { data, error } = await supabase
       .from('users')
@@ -80,7 +198,7 @@ export async function deleteUser(userId: string) {
   }
 }
 
-// Organization management functions
+// Enhanced organization management functions
 export async function getOrganizations() {
   try {
     const { data, error } = await supabase
@@ -99,7 +217,7 @@ export async function getOrganizations() {
   }
 }
 
-export async function createOrganization(orgData: any) {
+export async function createOrganization(orgData: Tables['organizations']['Insert']) {
   try {
     const { data, error } = await supabase
       .from('organizations')
@@ -115,7 +233,7 @@ export async function createOrganization(orgData: any) {
   }
 }
 
-export async function updateOrganization(orgId: string, updates: any) {
+export async function updateOrganization(orgId: string, updates: Tables['organizations']['Update']) {
   try {
     const { data, error } = await supabase
       .from('organizations')
@@ -132,7 +250,7 @@ export async function updateOrganization(orgId: string, updates: any) {
   }
 }
 
-// Survey management functions
+// Enhanced survey management functions
 export async function getSurveys(organizationId?: string) {
   try {
     let query = supabase
@@ -157,7 +275,7 @@ export async function getSurveys(organizationId?: string) {
   }
 }
 
-export async function createSurvey(surveyData: any) {
+export async function createSurvey(surveyData: Tables['surveys']['Insert']) {
   try {
     const { data, error } = await supabase
       .from('surveys')
@@ -185,7 +303,7 @@ export async function createSurvey(surveyData: any) {
   }
 }
 
-export async function updateSurvey(surveyId: string, updates: any) {
+export async function updateSurvey(surveyId: string, updates: Tables['surveys']['Update']) {
   try {
     const { data, error } = await supabase
       .from('surveys')
@@ -202,7 +320,7 @@ export async function updateSurvey(surveyId: string, updates: any) {
   }
 }
 
-// Beneficiary management functions
+// Enhanced beneficiary management functions
 export async function getBeneficiaries(organizationId?: string) {
   try {
     let query = supabase
@@ -223,7 +341,7 @@ export async function getBeneficiaries(organizationId?: string) {
   }
 }
 
-export async function createBeneficiary(beneficiaryData: any) {
+export async function createBeneficiary(beneficiaryData: Tables['beneficiaries']['Insert']) {
   try {
     const { data, error } = await supabase
       .from('beneficiaries')
@@ -239,7 +357,7 @@ export async function createBeneficiary(beneficiaryData: any) {
   }
 }
 
-export async function updateBeneficiary(beneficiaryId: string, updates: any) {
+export async function updateBeneficiary(beneficiaryId: string, updates: Tables['beneficiaries']['Update']) {
   try {
     const { data, error } = await supabase
       .from('beneficiaries')
@@ -256,7 +374,7 @@ export async function updateBeneficiary(beneficiaryId: string, updates: any) {
   }
 }
 
-// Response management functions
+// Enhanced response management functions
 export async function getSurveyResponses(surveyId: string) {
   try {
     const { data, error } = await supabase
@@ -277,7 +395,7 @@ export async function getSurveyResponses(surveyId: string) {
   }
 }
 
-export async function submitSurveyResponse(responseData: any) {
+export async function submitSurveyResponse(responseData: Tables['responses']['Insert']) {
   try {
     const { data, error } = await supabase
       .from('responses')
@@ -293,8 +411,8 @@ export async function submitSurveyResponse(responseData: any) {
   }
 }
 
-// Activity logging functions
-export async function logActivity(activityData: any) {
+// Enhanced activity logging functions
+export async function logActivity(activityData: Tables['activity_log']['Insert']) {
   try {
     const { data, error } = await supabase
       .from('activity_log')
@@ -335,7 +453,7 @@ export async function getActivityLogs(organizationId?: string) {
   }
 }
 
-// Transaction management functions
+// Enhanced transaction management functions
 export async function getTransactions(organizationId?: string) {
   try {
     let query = supabase
@@ -359,7 +477,7 @@ export async function getTransactions(organizationId?: string) {
   }
 }
 
-export async function createTransaction(transactionData: any) {
+export async function createTransaction(transactionData: Tables['transactions']['Insert']) {
   try {
     const { data, error } = await supabase
       .from('transactions')
@@ -374,7 +492,7 @@ export async function createTransaction(transactionData: any) {
       log_id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       organization_id: transactionData.organization_id,
       action: 'إنشاء معاملة مالية',
-      details: `تم إنشاء معاملة بقيمة ${transactionData.total} ريال`,
+      details: `تم إنشاء معاملة بقيمة ${transactionData.amount} ${transactionData.currency}`,
       ip_address: null,
       user_agent: navigator.userAgent
     });
@@ -386,7 +504,7 @@ export async function createTransaction(transactionData: any) {
   }
 }
 
-// Request management functions
+// Enhanced request management functions
 export async function getOrganizationRequests() {
   try {
     const { data, error } = await supabase
@@ -402,7 +520,7 @@ export async function getOrganizationRequests() {
   }
 }
 
-export async function createOrganizationRequest(requestData: any) {
+export async function createOrganizationRequest(requestData: Tables['requests']['Insert']) {
   try {
     const { data, error } = await supabase
       .from('requests')
@@ -418,7 +536,7 @@ export async function createOrganizationRequest(requestData: any) {
   }
 }
 
-export async function updateOrganizationRequest(requestId: string, updates: any) {
+export async function updateOrganizationRequest(requestId: string, updates: Tables['requests']['Update']) {
   try {
     const { data, error } = await supabase
       .from('requests')
@@ -435,7 +553,7 @@ export async function updateOrganizationRequest(requestId: string, updates: any)
   }
 }
 
-// Subscription plan functions
+// Enhanced subscription plan functions
 export async function getSubscriptionPlans() {
   try {
     const { data, error } = await supabase
@@ -452,7 +570,7 @@ export async function getSubscriptionPlans() {
   }
 }
 
-// Utility functions
+// Enhanced utility functions
 export async function generateId(prefix: string = ''): Promise<string> {
   return `${prefix}${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
@@ -497,7 +615,7 @@ export async function checkDatabaseHealth() {
   }
 }
 
-// Real-time subscriptions
+// Enhanced real-time subscriptions with error handling
 export function subscribeToSurveyResponses(surveyId: string, callback: (payload: any) => void) {
   try {
     return supabase
@@ -552,8 +670,8 @@ export function subscribeToActivityLogs(organizationId: string, callback: (paylo
   }
 }
 
-// Questions management
-export async function createQuestion(questionData: any) {
+// New functions for questions management
+export async function createQuestion(questionData: Tables['questions']['Insert']) {
   try {
     const { data, error } = await supabase
       .from('questions')
@@ -585,7 +703,7 @@ export async function getQuestionsBySurvey(surveyId: string) {
   }
 }
 
-// Roles management
+// New functions for roles management
 export async function getRoles() {
   try {
     const { data, error } = await supabase
@@ -601,7 +719,7 @@ export async function getRoles() {
   }
 }
 
-// Analytics functions
+// Analytics and reporting functions
 export async function getOrganizationStats(organizationId: string) {
   try {
     const [surveysResult, beneficiariesResult, responsesResult] = await Promise.all([
@@ -644,4 +762,16 @@ export async function getOrganizationStats(organizationId: string) {
   }
 }
 
-// Export functions for use in components
+// Export types for use in components
+export type {
+  User,
+  Organization,
+  Survey,
+  Beneficiary,
+  Response,
+  ActivityLog,
+  Transaction,
+  Request,
+  Role,
+  SubscriptionPlan
+};

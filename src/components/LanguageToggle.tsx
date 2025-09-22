@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger
 } from './ui/dropdown-menu';
 import { Globe, Check } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface Language {
   code: string;

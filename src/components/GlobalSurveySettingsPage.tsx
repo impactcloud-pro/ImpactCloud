@@ -28,7 +28,7 @@ import {
   ChevronRight,
   Hash
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { EnhancedPageLayout } from './EnhancedPageLayout';
 
 interface DomainQuestion {

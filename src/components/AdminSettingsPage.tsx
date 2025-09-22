@@ -27,7 +27,7 @@ import {
   Download, Save, Edit, Trash2, UserCheck, AlertCircle, Link, Cog,
   UserCog, UserPlus, RefreshCw, Info
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 // Import utilities
 import { systemRoles, organizationOptions, type User, type Role, type EditUserFormData } from '../constants/settingsConstants';

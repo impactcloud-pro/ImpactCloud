@@ -31,7 +31,7 @@ import {
   Send
 } from 'lucide-react';
 import { Survey } from '../App';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { EnhancedPageLayout } from './EnhancedPageLayout';
 
 // Simple QR Code component

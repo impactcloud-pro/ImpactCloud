@@ -21,7 +21,7 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { Survey } from './App';
 
 interface OrganizationSurveysPageProps {

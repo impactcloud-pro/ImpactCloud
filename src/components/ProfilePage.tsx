@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { ImageUploader } from './ImageUploader';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface ProfilePageProps {
   userRole: 'org_manager';

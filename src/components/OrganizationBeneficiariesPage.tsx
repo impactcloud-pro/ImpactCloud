@@ -32,7 +32,7 @@ import {
   Clock
 } from 'lucide-react';
 import { EnhancedPageLayout } from './EnhancedPageLayout';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface Beneficiary {
   id: string;

@@ -49,7 +49,7 @@ import {
   UserPlus,
   Building2
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 // Data for different impact sectors
 const sectorData = {

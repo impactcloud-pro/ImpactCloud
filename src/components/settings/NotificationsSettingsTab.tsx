@@ -8,7 +8,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Mail, Bell, Smartphone, MessageSquare, AlertCircle, TestTube } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface NotificationsSettingsTabProps {
   notificationSettings: {

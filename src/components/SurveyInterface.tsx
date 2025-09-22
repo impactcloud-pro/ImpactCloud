@@ -8,7 +8,6 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { toast } from 'sonner';
 import { 
   ChevronRight, 
   ChevronLeft,

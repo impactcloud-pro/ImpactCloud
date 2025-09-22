@@ -41,7 +41,7 @@ import {
   Calendar,
   Clock
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import type { Survey } from '../App';
 
 interface SurveyCreationWizardProps {

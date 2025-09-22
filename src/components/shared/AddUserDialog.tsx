@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { RefreshCw, Save, UserPlus } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { systemRoles, organizationOptions, type User } from '../../constants/settingsConstants';
 
 type UserRole = 'super_admin' | 'admin' | 'org_manager' | 'beneficiary';

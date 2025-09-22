@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { SupabaseProvider } from './components/SupabaseProvider';
-import { useAuth } from './hooks/useAuth';
-import { useAuth } from './hooks/useAuth';
 import { DatabaseStatus } from './components/DatabaseStatus';
 import { Layout } from './components/Layout';
 import { LandingPage } from './components/LandingPage';
@@ -11,9 +9,11 @@ import { ForgotPasswordModal } from './components/ForgotPasswordModal';
 import { LanguageToggle } from './components/LanguageToggle';
 import { FaviconUpdater } from './components/FaviconUpdater';
 import { Toaster } from './components/ui/sonner';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
-import { testSupabaseConnection } from './lib/supabase';
+// Import Supabase services
+import { useAuth, useSupabase } from './hooks/useSupabase';
+import { testSupabaseConnection, initializeDatabase } from './lib/supabase';
 
 // Import database functions
 import { 
@@ -26,7 +26,7 @@ import {
 import type { User, Survey, SubscriptionFlow } from './constants/types';
 import { availablePackages } from './constants/demoData';
 import { pagePermissions } from './constants/permissions';
-import { getDefaultPageForRole } from './utils/authUtils';
+import { authenticateUser, getDefaultPageForRole } from './utils/authUtils';
 import { renderCurrentPage } from './utils/routeUtils';
 import { initializeUrlRouting, updateUrl, getCurrentPageFromUrl } from './utils/urlUtils';
 import type { PaymentMethod } from './components/PaymentMethodPage';
@@ -34,8 +34,7 @@ import type { PaymentFormData } from './components/PaymentDetailsPage';
 
 export type { UserRole, User, Survey } from './constants/types';
 
-function AppContent(): JSX.Element {
-  const { user, userProfile, loading } = useAuth();
+export default function App(): JSX.Element {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState<string>('landing');
   const [selectedSurveyId, setSelectedSurveyId] = useState<string>('');
@@ -51,31 +50,6 @@ function AppContent(): JSX.Element {
   const [isDatabaseReady, setIsDatabaseReady] = useState(false);
   const [showDatabaseStatus, setShowDatabaseStatus] = useState(false);
 
-  // Update currentUser when Supabase auth state changes
-  useEffect(() => {
-    if (user && userProfile) {
-      const appUser: User = {
-        email: user.email!,
-        name: userProfile.name,
-        role: userProfile.role_id,
-        organization: userProfile.organizations?.name
-      };
-      setCurrentUser(appUser);
-      
-      // Navigate to appropriate page based on role
-      if (currentPage === 'login') {
-        const defaultPage = getDefaultPageForRole(appUser.role);
-        setCurrentPage(defaultPage);
-        updateUrl(defaultPage);
-      }
-    } else if (!loading) {
-      setCurrentUser(null);
-      if (currentPage !== 'landing' && currentPage !== 'org-registration') {
-        setCurrentPage('login');
-        updateUrl('login');
-      }
-    }
-  }, [user, userProfile, loading, currentPage]);
   // Test database connection on app start
   useEffect(() => {
     const testConnection = async () => {
@@ -83,14 +57,15 @@ function AppContent(): JSX.Element {
         const isConnected = await testSupabaseConnection();
         if (isConnected) {
           setIsDatabaseReady(true);
-          console.log('Database connected successfully');
+          toast.success('تم الاتصال بقاعدة البيانات بنجاح');
         } else {
           setShowDatabaseStatus(true);
-          console.warn('Database connection needs verification');
+          toast.warning('يرجى التحقق من اتصال قاعدة البيانات');
         }
       } catch (error) {
         console.error('Database connection test failed:', error);
         setShowDatabaseStatus(true);
+        toast.error('فشل في الاتصال بقاعدة البيانات');
       }
     };
 
@@ -120,6 +95,7 @@ function AppContent(): JSX.Element {
 
   const handleGoToLanding = (): void => {
     setCurrentPage('landing');
+    setCurrentUser(null);
     updateUrl('landing');
   };
 
@@ -133,14 +109,28 @@ function AppContent(): JSX.Element {
     updateUrl('org-registration');
   };
 
-  const handleLogin = (): void => {
-    // This is now handled by the auth state change
+  const handleLogin = (loginInput: string, password: string): void => {
+    // First try demo authentication for development
+    const user = authenticateUser(loginInput, password);
+    
+    if (user) {
+      setCurrentUser(user);
+      const defaultPage = getDefaultPageForRole(user.role);
+      setCurrentPage(defaultPage);
+      updateUrl(defaultPage);
+      toast.success(`مرحباً ${user.name}! تم تسجيل الدخول بنجاح`);
+    } else {
+      // If demo auth fails, could try Supabase auth here
+      toast.error('بيانات تسجيل الدخول غير صحيحة. جرب الحسابات التجريبية المعروضة.');
+    }
   };
 
   const handleLogout = (): void => {
+    setCurrentUser(null);
     setCurrentPage('landing');
     setSubscriptionFlow({ selectedPackage: null, selectedMethod: null, paymentData: null });
     updateUrl('landing');
+    toast.info('تم تسجيل الخروج بنجاح');
   };
 
   const handleNavigate = (page: string): void => {
@@ -299,6 +289,7 @@ function AppContent(): JSX.Element {
   };
 
   const handleReturnToLanding = (): void => {
+    setCurrentUser(null);
     setCurrentPage('landing');
     updateUrl('landing');
   };
@@ -306,18 +297,6 @@ function AppContent(): JSX.Element {
   const handleLanguageChange = (language: string): void => {
     console.log('Language changed to:', language);
   };
-
-  // Show loading screen while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#18325A] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg">جاري تحميل المنصة...</p>
-        </div>
-      </div>
-    );
-  }
 
   const renderPage = (): React.ReactNode => {
     if (!currentUser && currentPage === 'landing') {
@@ -377,17 +356,48 @@ function AppContent(): JSX.Element {
   };
 
   return (
-    <>
-      {/* Database Status Check */}
-      {showDatabaseStatus && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <DatabaseStatus onConnectionReady={() => {
-            setIsDatabaseReady(true);
-            setShowDatabaseStatus(false);
-          }} />
-      {!currentUser && (currentPage === 'landing' || currentPage === 'org-registration') ? (
-        <>
-          {renderPage()}
+    <div className="min-h-screen bg-background text-foreground" dir="rtl">
+      <FaviconUpdater />
+      <SupabaseProvider>
+        {/* Database Status Check */}
+        {showDatabaseStatus && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <DatabaseStatus onConnectionReady={() => {
+              setIsDatabaseReady(true);
+              setShowDatabaseStatus(false);
+            }} />
+          </div>
+        )}
+
+        {!currentUser && (currentPage === 'landing' || currentPage === 'org-registration') ? (
+          <>
+            {renderPage()}
+            <Toaster 
+              position="top-center"
+              dir="rtl"
+              toastOptions={{
+                style: {
+                  fontFamily: 'Cairo, IBM Plex Arabic, Noto Sans Arabic, Inter, sans-serif',
+                  textAlign: 'right',
+                  direction: 'rtl'
+                }
+              }}
+            />
+          </>
+        ) : (
+          <Layout
+            currentPage={currentPage}
+            userRole={currentUser?.role || 'beneficiary'}
+            userName={currentUser?.name || ''}
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+            onGoToLanding={handleGoToLanding}
+          >
+            {renderPage()}
+          </Layout>
+        )}
+        
+        {currentUser && (
           <Toaster 
             position="top-center"
             dir="rtl"
@@ -399,39 +409,14 @@ function AppContent(): JSX.Element {
               }
             }}
           />
-        </>
-      ) : (
-        <Layout
-          currentPage={currentPage}
-          userRole={currentUser?.role || 'beneficiary'}
-          userName={currentUser?.name || ''}
-          onNavigate={handleNavigate}
-          onLogout={handleLogout}
-          onGoToLanding={handleGoToLanding}
-        >
-          {renderPage()}
-        </Layout>
-      )}
-      
-      {currentUser && (
-        <Toaster 
-          position="top-center"
-          dir="rtl"
-          toastOptions={{
-            style: {
-              fontFamily: 'Cairo, IBM Plex Arabic, Noto Sans Arabic, Inter, sans-serif',
-              textAlign: 'right',
-              direction: 'rtl'
-            }
-          }}
-        />
-      )}
-        </div>
+        )}
+      </SupabaseProvider>
+
       <ForgotPasswordModal 
         isOpen={showForgotPassword}
         onClose={() => setShowForgotPassword(false)}
       />
-      )}
+
       {/* Database Connection Status Indicator */}
       {isDatabaseReady && (
         <div className="fixed bottom-4 left-4 z-40">
@@ -441,17 +426,6 @@ function AppContent(): JSX.Element {
           </div>
         </div>
       )}
-    </>
-  );
-}
-
-export default function App(): JSX.Element {
-  return (
-    <div className="min-h-screen bg-background text-foreground" dir="rtl">
-      <FaviconUpdater />
-      <SupabaseProvider>
-        <AppContent />
-      </SupabaseProvider>
     </div>
   );
 }

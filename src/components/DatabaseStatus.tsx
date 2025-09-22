@@ -15,7 +15,7 @@ import {
   FileText
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 interface DatabaseStatusProps {
   onConnectionReady?: () => void;

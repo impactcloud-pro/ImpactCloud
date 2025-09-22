@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { exportSettingsToExcel } from '../utils/settingsUtils';
 import type { User, Role, PaymentMethod, BankDetails, EditUserFormData, Integration } from '../constants/settingsConstants';
 

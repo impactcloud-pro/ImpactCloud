@@ -7,9 +7,7 @@ import { Badge } from './ui/badge';
 import { Logo } from './Logo';
 import { Eye, EyeOff, Mail, Lock, LogIn, ArrowLeft, User, Users, Building } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
-import { toast } from 'sonner';
-import { useAuth } from '../hooks/useAuth';
-import { setupDatabase, testLogin } from '../lib/supabase';
+import { toast } from 'sonner@2.0.3';
 
 interface LoginPageProps {
   onLogin: (loginInput: string, password: string) => void;
@@ -18,64 +16,36 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageProps) {
-  const [email, setEmail] = useState('');
+  const [loginInput, setLoginInput] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { signIn, loading, error } = useAuth();
-  const [isSettingUp, setIsSettingUp] = useState(false);
-  const [isTestingLogin, setIsTestingLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!loginInput || !password) {
       toast.error('يرجى إدخال بيانات تسجيل الدخول وكلمة المرور');
       return;
     }
 
-    // Validate email format
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      toast.error('يرجى إدخال بريد إلكتروني صحيح');
-      return;
-    }
+    setIsLoading(true);
+
+    // Simulate loading delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
-      const result = await signIn(email, password);
-      
-      if (result.user) {
-        toast.success('تم تسجيل الدخول بنجاح!');
-        // The auth state change will handle navigation
-      }
+      onLogin(loginInput, password);
     } catch (error) {
-      // Error is already handled in useAuth hook
-      console.error('Login failed:', error);
+      toast.error('حدث خطأ أثناء تسجيل الدخول');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleSetupDatabase = async () => {
-    setIsSettingUp(true);
-    try {
-      await setupDatabase();
-      toast.success('تم إنشاء المستخدمين التجريبيين بنجاح! يمكنك الآن تسجيل الدخول');
-    } catch (error) {
-      console.error('Setup failed:', error);
-      toast.error('فشل في إنشاء المستخدمين التجريبيين');
-    } finally {
-      setIsSettingUp(false);
-    }
-  };
-
-  const handleTestLogin = async () => {
-    setIsTestingLogin(true);
-    try {
-      await testLogin();
-      toast.success('تم اختبار تسجيل الدخول بنجاح!');
-    } catch (error) {
-      console.error('Test login failed:', error);
-      toast.error('فشل في اختبار تسجيل الدخول');
-    } finally {
-      setIsTestingLogin(false);
-    }
+  const handleDemoLogin = (email: string, demoPassword: string) => {
+    // Demo login removed - use real authentication
+    toast.info('يرجى استخدام بيانات دخول حقيقية');
   };
 
   return (
@@ -111,48 +81,20 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Development Setup Buttons */}
-            <div className="space-y-3 p-4 bg-white/5 rounded-lg border border-white/20">
-              <p className="text-white text-sm text-center">أدوات التطوير:</p>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  onClick={handleSetupDatabase}
-                  disabled={isSettingUp}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
-                  size="sm"
-                >
-                  {isSettingUp ? 'جاري الإنشاء...' : 'إنشاء المستخدمين التجريبيين'}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleTestLogin}
-                  disabled={isTestingLogin}
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                  size="sm"
-                >
-                  {isTestingLogin ? 'جاري الاختبار...' : 'اختبار تسجيل الدخول'}
-                </Button>
-              </div>
-              <p className="text-white/70 text-xs text-center">
-                بعد إنشاء المستخدمين، استخدم: admin@test.com / TestPass123!
-              </p>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">البريد الإلكتروني</Label>
+                <Label htmlFor="loginInput" className="text-white">اسم المستخدم</Label>
                 <div className="relative">
                   <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="أدخل البريد الإلكتروني"
+                    id="loginInput"
+                    type="text"
+                    value={loginInput}
+                    onChange={(e) => setLoginInput(e.target.value)}
+                    placeholder="أدخل اسم المستخدم"
                     className="bg-white/10 border-white/30 text-white placeholder-white/60 focus:border-white/50 pl-10"
                     required
                   />
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
                 </div>
               </div>
 
@@ -190,19 +132,12 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
                 </button>
               </div>
 
-              {/* Error Display */}
-              {error && (
-                <div className="bg-red-500/20 border border-red-400/50 rounded-lg p-3 text-red-200 text-sm">
-                  {error}
-                </div>
-              )}
-
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full bg-white text-[#18325A] hover:bg-gray-100 h-11 font-semibold"
               >
-                {loading ? (
+                {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-[#18325A] border-t-transparent rounded-full animate-spin"></div>
                     جاري تسجيل الدخول...
