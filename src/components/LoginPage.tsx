@@ -233,6 +233,40 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
               </Button>
             </form>
 
+          {/* Setup Section for Development */}
+          <div className="mt-6 pt-6 border-t border-white/20">
+            <div className="text-center space-y-4">
+              <p className="text-sm text-blue-200">
+                للاختبار: إنشاء المستخدمين التجريبيين
+              </p>
+              <Button
+                onClick={handleCreateTestUsers}
+                disabled={isCreatingUsers}
+                variant="outline"
+                className="w-full border-white/30 text-white hover:bg-white/10"
+              >
+                {isCreatingUsers ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    جاري إنشاء المستخدمين...
+                  </div>
+                ) : (
+                  'إنشاء المستخدمين التجريبيين'
+                )}
+              </Button>
+              
+              {/* Test Credentials */}
+              <div className="bg-white/5 rounded-lg p-4 text-xs text-blue-200">
+                <p className="font-semibold mb-2">بيانات الاختبار:</p>
+                <div className="space-y-1 text-left" dir="ltr">
+                  <p>admin@test.com / password123 (Super Admin)</p>
+                  <p>manager@test.com / password123 (Org Manager)</p>
+                  <p>user@test.com / password123 (Admin)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           </CardContent>
         </Card>
       </div>
