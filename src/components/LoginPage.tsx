@@ -95,12 +95,12 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
 
           <CardContent className="space-y-6">
             {/* Test Users Info */}
-            <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-3 text-blue-200 text-sm">
-              <p className="font-semibold mb-2">حسابات تجريبية:</p>
+            <div className="bg-yellow-500/20 border border-yellow-400/50 rounded-lg p-3 text-yellow-200 text-sm">
+              <p className="font-semibold mb-2">⚠️ إذا لم تعمل بيانات الاختبار:</p>
               <div className="space-y-1 text-xs">
-                <p>• superadmin@system.com / SuperAdmin123!</p>
-                <p>• admin@atharonaa.com / Admin123!</p>
-                <p>• manager@organization.com / Manager123!</p>
+                <p>1. تحقق من إعدادات Supabase Auth</p>
+                <p>2. تأكد من تعطيل Email Confirmation</p>
+                <p>3. أو استخدم VITE_SUPABASE_SERVICE_ROLE_KEY</p>
               </div>
             </div>
 

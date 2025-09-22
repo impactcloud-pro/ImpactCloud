@@ -36,43 +36,24 @@ export const supabaseAdmin = supabaseServiceKey ? createClient(supabaseUrl, supa
 // Create test users function
 export async function createTestUsers() {
   try {
-    // Check if users already exist first
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const existingEmails = existingUsers?.users?.map(u => u.email) || [];
-    
-    if (existingEmails.includes('superadmin@system.com')) {
-      console.log('Test users already exist');
-      return true;
-    }
-
     const testUsers = [
       {
         email: 'superadmin@system.com',
         password: 'SuperAdmin123!',
-        user_metadata: {
-          name: 'مدير النظام الرئيسي',
-          role_id: 'super_admin',
-          status: 'Active'
-        }
+        name: 'مدير النظام الرئيسي',
+        role_id: 'super_admin'
       },
       {
         email: 'admin@atharonaa.com',
         password: 'Admin123!',
-        user_metadata: {
-          name: 'مدير أثرنا',
-          role_id: 'admin',
-          status: 'Active'
-        }
+        name: 'مدير أثرنا',
+        role_id: 'admin'
       },
       {
         email: 'manager@organization.com',
         password: 'Manager123!',
-        user_metadata: {
-          name: 'مدير المنظمة',
-          role_id: 'org_manager',
-          organization_id: 'org_001',
-          status: 'Active'
-        }
+        name: 'مدير المنظمة',
+        role_id: 'org_manager'
       }
     ];
 
@@ -80,29 +61,71 @@ export async function createTestUsers() {
     
     for (const user of testUsers) {
       try {
-        // Create user with regular signup first
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: user.email,
-          password: user.password,
-          options: {
-            data: user.user_metadata
-          }
-        });
+        // Check if user already exists
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('email')
+          .eq('email', user.email)
+          .single();
 
-        if (authError && !authError.message.includes('already registered')) {
-          console.error(`Error creating user ${user.email}:`, authError);
+        if (existingUser) {
+          console.log(`User ${user.email} already exists`);
           continue;
         }
 
-        // If user was created, try to confirm them manually
-        if (authData.user) {
-          // Try to confirm the user if admin client is available
-          if (supabaseAdmin) {
-            await supabaseAdmin.auth.admin.updateUserById(authData.user.id, {
-              email_confirm: true
-            });
+        // Use admin client to create confirmed user
+        if (supabaseAdmin) {
+          const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.createUser({
+            email: user.email,
+            password: user.password,
+            email_confirm: true,
+            user_metadata: {
+              name: user.name,
+              role_id: user.role_id
+            }
+          });
+
+          if (adminError) {
+            console.error(`Admin create error for ${user.email}:`, adminError);
+            continue;
           }
-          console.log(`✓ Test user created: ${user.email}`);
+
+          // Create user profile in database
+          if (adminData.user) {
+            const { error: profileError } = await supabase
+              .from('users')
+              .insert({
+                user_id: adminData.user.id,
+                name: user.name,
+                email: user.email,
+                role_id: user.role_id,
+                status: 'Active'
+              });
+
+            if (profileError) {
+              console.error(`Profile creation error for ${user.email}:`, profileError);
+            } else {
+              console.log(`✓ Test user created successfully: ${user.email}`);
+            }
+          }
+        } else {
+          // Fallback: regular signup (will need manual confirmation)
+          const { data: signupData, error: signupError } = await supabase.auth.signUp({
+            email: user.email,
+            password: user.password,
+            options: {
+              data: {
+                name: user.name,
+                role_id: user.role_id
+              }
+            }
+          });
+
+          if (signupError && !signupError.message.includes('already registered')) {
+            console.error(`Signup error for ${user.email}:`, signupError);
+          } else if (signupData.user) {
+            console.log(`✓ Test user signed up (needs confirmation): ${user.email}`);
+          }
         }
       } catch (error) {
         console.error(`Failed to create user ${user.email}:`, error);
