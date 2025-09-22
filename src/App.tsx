@@ -11,9 +11,6 @@ import { FaviconUpdater } from './components/FaviconUpdater';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner@2.0.3';
 
-// Import Supabase services
-// Removed duplicate useAuth import - using the one from './hooks/useAuth'
-
 // Import database functions
 import { 
   getAllSurveys, 
