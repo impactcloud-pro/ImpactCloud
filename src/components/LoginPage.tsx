@@ -77,33 +77,32 @@ export function LoginPage({ onLogin, onLogoClick, onForgotPassword }: LoginPageP
 
   const handleTestLogin = (testEmail: string, testPassword: string) => {
     setEmail(testEmail);
-    setPassword(testPassword);
-  };
+            {/* Setup Section for Development */}
+            <div className="mt-6 pt-6 border-t border-white/20">
+              <div className="text-center space-y-4">
+                <p className="text-sm text-blue-200">
+                  للاختبار: إنشاء المستخدمين التجريبيين
+                </p>
+                <Button
+                  onClick={handleCreateTestUsers}
+                  disabled={isCreatingUsers}
+                  variant="outline"
+                  className="w-full border-white/30 text-white hover:bg-white/10"
+                >
+                  {isCreatingUsers ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      جاري إنشاء المستخدمين...
+                    </div>
+                  ) : (
+                    'إنشاء المستخدمين التجريبيين'
+                  )}
+                </Button>
+              </div>
+            </div>
 
-  return (
-    <div className="min-h-screen bg-[#18325A] flex items-center justify-center p-4" dir="rtl">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-32 h-32 bg-white/5 rounded-full blur-xl"></div>
-        <div className="absolute bottom-20 right-20 w-48 h-48 bg-blue-300/10 rounded-full blur-2xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-      </div>
-      
-      <div className="w-full max-w-md mx-auto relative z-10">
-        {/* Header Section */}
-        <div className="text-center mb-8 space-y-6">
-          {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <Logo 
-              onClick={onLogoClick}
-              size="xl"
-              showText={true}
-              variant="light"
-              className="cursor-pointer transform hover:scale-105 transition-transform duration-200"
-            />
-          </div>
-        </div>
-
+          </CardContent>
+        </Card>
         {/* Login Form */}
         <Card className="bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl">
           <CardHeader className="space-y-1 pb-4">
