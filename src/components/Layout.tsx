@@ -7,7 +7,7 @@ import { BarChart3, Users, FileText, CreditCard, LogOut, DivideIcon as LucideIco
 import type { UserRole } from '../App';
 import { getPageTitle } from './PageTitles';
 import { AIChatWidget } from './AIChatWidget';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface LayoutProps {
   children: React.ReactNode;

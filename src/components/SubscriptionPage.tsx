@@ -32,7 +32,7 @@ import {
   MoreHorizontal,
   DollarSign
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 type UserRole = 'super_admin' | 'admin' | 'org_manager' | 'beneficiary';
 

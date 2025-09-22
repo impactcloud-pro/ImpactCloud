@@ -10,7 +10,7 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { 
   ChevronRight, 
-  ChevronLeft,
+import { toast } from 'sonner';
   Clock,
   Users,
   CheckCircle,

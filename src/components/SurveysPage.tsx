@@ -19,7 +19,7 @@ import { mockSurveys } from './surveys/constants';
 import { SurveyCard } from './surveys/SurveyCard';
 import { SurveyStats } from './surveys/SurveyStats';
 import { EnhancedPageLayout } from './EnhancedPageLayout';
-
+import { toast } from 'sonner';
 interface SurveysPageProps {
   userRole: UserRole;
   onCreateSurvey: () => void;

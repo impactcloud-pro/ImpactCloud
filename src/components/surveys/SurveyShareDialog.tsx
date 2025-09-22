@@ -48,7 +48,7 @@ import {
   Share
 } from 'lucide-react';
 import { Survey } from '../../App';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 // Simple QR Code component
 const SimpleQRCode = ({ value, size = 200, className = '' }: { value: string; size?: number; className?: string }) => {
