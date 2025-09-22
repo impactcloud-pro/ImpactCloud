@@ -24,22 +24,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-      if (profileError) {
-        console.error('❌ Profile creation error:', profileError);
-        throw profileError;
-      }
-      
-      console.log('✅ User profile created successfully');
-    }
-
-    console.log('🎉 Database setup completed successfully!');
-    return true;
-  } catch (error) {
-    console.error('💥 Database setup failed:', error);
-    throw error;
-  }
-}
-
 // Test login function
 export async function testLogin() {
   try {
@@ -199,3 +183,19 @@ export async function setupDatabase() {
           status: testUser.userData.status,
           created_at: new Date().toISOString()
         });
+
+      if (profileError) {
+        console.error('❌ Profile creation error:', profileError);
+        throw profileError;
+      }
+      
+      console.log('✅ User profile created successfully');
+    }
+
+    console.log('🎉 Database setup completed successfully!');
+    return true;
+  } catch (error) {
+    console.error('💥 Database setup failed:', error);
+    throw error;
+  }
+}
